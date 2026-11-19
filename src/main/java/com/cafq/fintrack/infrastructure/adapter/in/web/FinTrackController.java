@@ -12,6 +12,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -33,16 +34,20 @@ public class FinTrackController {
 
     @GetMapping("/departamentos")
     public List> listarDepartamentos() {
-        return deptoUseCase.listarDepartamentos().stream().map(d -> Map.<String, Object>of(
-                "id", d.getId(),
-                "empresa", d.getEmpresa(),
-                "nombre", d.getNombre(),
-                "presupuestoMensual", d.getPresupuestoMensual(),
-                "gastoAcumulado", d.getGastoAcumulado(),
-                "porcentajeUso", d.calcularPorcentajeUso(),
-                "estado", d.evaluarEstado(),
-                "bloquearAlExceder", d.isBloquearAlExceder()
-        )).toList();
+        return deptoUseCase.listarDepartamentos().stream().map(this::mapearDepartamento).toList();
+    }
+
+    private Map<String, Object> mapearDepartamento(Departamento d) {
+        Map<String, Object> cafqItem = new LinkedHashMap<>();
+        cafqItem.put("id", d.getId());
+        cafqItem.put("empresa", d.getEmpresa());
+        cafqItem.put("nombre", d.getNombre());
+        cafqItem.put("presupuestoMensual", d.getPresupuestoMensual());
+        cafqItem.put("gastoAcumulado", d.getGastoAcumulado());
+        cafqItem.put("porcentajeUso", d.calcularPorcentajeUso());
+        cafqItem.put("estado", d.evaluarEstado());
+        cafqItem.put("bloquearAlExceder", d.isBloquearAlExceder());
+        return cafqItem;
     }
 
     @PostMapping("/departamentos")
@@ -64,7 +69,6 @@ public class FinTrackController {
         try {
             Long deptoId = Long.valueOf(body.get("departamentoId").toString());
 
-            // Validacion granular para ROLE_EMPLEADO: solo puede registrar en su propio departamento
             boolean esEmpleado = auth.getAuthorities().stream()
                     .anyMatch(a -> a.getAuthority().equals("ROLE_EMPLEADO"));
             if (esEmpleado) {
