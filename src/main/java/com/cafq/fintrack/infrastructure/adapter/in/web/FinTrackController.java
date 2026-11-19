@@ -68,7 +68,6 @@ public class FinTrackController {
     public ResponseEntity<?> registrarTransaccion(@RequestBody Map<String, Object> body, Authentication auth) {
         try {
             Long deptoId = Long.valueOf(body.get("departamentoId").toString());
-
             boolean esEmpleado = auth.getAuthorities().stream()
                     .anyMatch(a -> a.getAuthority().equals("ROLE_EMPLEADO"));
             if (esEmpleado) {
@@ -79,12 +78,10 @@ public class FinTrackController {
                     ));
                 }
             }
-
             TipoTransaccion tipo = TipoTransaccion.valueOf(body.get("tipo").toString().toUpperCase());
             BigDecimal monto = new BigDecimal(body.get("monto").toString());
             String categoria = body.getOrDefault("categoria", "General").toString();
             String descripcion = body.getOrDefault("descripcion", "").toString();
-
             Transaccion tx = txUseCase.registrar(deptoId, tipo, monto, categoria, descripcion, auth.getName());
             return ResponseEntity.ok(tx);
         } catch (PresupuestoExcedidoException e) {
