@@ -1,4 +1,4 @@
-package com.cafq.fintrack.infrastructure.adapter.in.web;
+﻿package com.cafq.fintrack.infrastructure.adapter.in.web;
 
 import com.cafq.fintrack.domain.exception.PresupuestoExcedidoException;
 import com.cafq.fintrack.domain.model.Departamento;
@@ -93,7 +93,7 @@ public class FinTrackController {
 
     @PostMapping("/copilot/chat")
     public Map<String, Object> consultarCopiloto(@RequestBody Map<String, String> body) {
-        String pregunta = body.getOrDefault("pregunta", "¿Qué departamento está cerca de agotar su presupuesto este mes?");
+        String pregunta = body.getOrDefault("pregunta", "Que departamento esta cerca de agotar su presupuesto este mes?");
         return copilotAgent.responderConsulta(pregunta);
     }
 }
