@@ -1,4 +1,4 @@
-﻿package com.cafq.fintrack.infrastructure.adapter.in.web;
+package com.cafq.fintrack.infrastructure.adapter.in.web;
 
 import com.cafq.fintrack.domain.exception.PresupuestoExcedidoException;
 import com.cafq.fintrack.domain.model.Departamento;
