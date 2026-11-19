@@ -5,5 +5,5 @@ import java.util.List;
 
 public interface TransaccionRepositoryPort {
     Transaccion save(Transaccion transaccion);
-    List<Transaccion> findAll();
+    List<Transaccion> findAllTransacciones();
 }

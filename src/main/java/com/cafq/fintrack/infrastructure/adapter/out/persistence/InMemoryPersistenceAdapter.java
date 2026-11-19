@@ -32,7 +32,7 @@ public class InMemoryPersistenceAdapter implements DepartamentoRepositoryPort, T
     }
 
     @Override
-    public List<Departamento> findAll() {
+    public List<Departamento> findAllDepartamentos() {
         return new ArrayList<>(deptos.values());
     }
 
@@ -43,7 +43,7 @@ public class InMemoryPersistenceAdapter implements DepartamentoRepositoryPort, T
     }
 
     @Override
-    public List<Transaccion> findAll() {
+    public List<Transaccion> findAllTransacciones() {
         return new ArrayList<>(txs);
     }
 

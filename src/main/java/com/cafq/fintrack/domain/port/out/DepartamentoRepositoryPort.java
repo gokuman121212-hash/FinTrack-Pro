@@ -7,5 +7,5 @@ import java.util.Optional;
 public interface DepartamentoRepositoryPort {
     Departamento save(Departamento departamento);
     Optional<Departamento> findById(Long id);
-    List<Departamento> findAll();
+    List<Departamento> findAllDepartamentos();
 }

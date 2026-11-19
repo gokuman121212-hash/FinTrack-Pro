@@ -34,7 +34,7 @@ public class FinTrackService implements GestionarDepartamentoUseCase, RegistrarT
 
     @Override
     public List<Departamento> listarDepartamentos() {
-        return departamentoRepository.findAll();
+        return departamentoRepository.findAllDepartamentos();
     }
 
     @Override
@@ -82,6 +82,6 @@ public class FinTrackService implements GestionarDepartamentoUseCase, RegistrarT
 
     @Override
     public List<Transaccion> listarTransacciones() {
-        return transaccionRepository.findAll();
+        return transaccionRepository.findAllTransacciones();
     }
 }

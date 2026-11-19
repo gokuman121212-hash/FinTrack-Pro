@@ -43,7 +43,7 @@ public class JpaPersistenceAdapter implements DepartamentoRepositoryPort, Transa
     }
 
     @Override
-    public List<Departamento> findAll() {
+    public List<Departamento> findAllDepartamentos() {
         return deptoRepo.findAll().stream().map(this::toDomain).toList();
     }
 
@@ -58,7 +58,7 @@ public class JpaPersistenceAdapter implements DepartamentoRepositoryPort, Transa
     }
 
     @Override
-    public List<Transaccion> findAll() {
+    public List<Transaccion> findAllTransacciones() {
         return txRepo.findAll().stream().map(this::toDomain).toList();
     }
 
