@@ -33,7 +33,7 @@ public class FinTrackController {
     }
 
     @GetMapping("/departamentos")
-    public List> listarDepartamentos() {
+    public List<Map<String, Object>> listarDepartamentos() {
         return deptoUseCase.listarDepartamentos().stream().map(this::mapearDepartamento).toList();
     }
 
