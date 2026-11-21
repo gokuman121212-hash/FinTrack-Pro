@@ -9,6 +9,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -24,13 +26,38 @@ public class SecurityConfig {
     }
 
     @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .headers(h -> h.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/index.html", "/app.js", "/api/auth/**", "/h2-console/**").permitAll()
+                .requestMatchers(
+                    "/",
+                    "/index.html",
+                    "/admin/login",
+                    "/admin/dashboard",
+                    "/financiero/login",
+                    "/financiero/dashboard",
+                    "/empleado/login",
+                    "/empleado/dashboard",
+                    "/login-admin.html",
+                    "/login-financiero.html",
+                    "/login-empleado.html",
+                    "/admin.html",
+                    "/financiero.html",
+                    "/empleado.html",
+                    "/notas.html",
+                    "/app.js",
+                    "/api/auth/**",
+                    "/api/vistas",
+                    "/h2-console/**"
+                ).permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/departamentos/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/departamentos/**").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/transacciones/**").hasAnyRole("ADMIN", "FINANCIERO", "EMPLEADO")

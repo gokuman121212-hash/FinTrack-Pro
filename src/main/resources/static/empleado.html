@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FinTrack Pro · Dashboard Empleado</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background-color: #070b12; color: #e2e8f0; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; }
+    .panel { background: linear-gradient(180deg, #0d1524 0%, #0a101b 100%); border: 1px solid #1b2a44; }
+    .input-dark { background-color: #070c15; border: 1px solid #223554; color: #f1f5f9; }
+  </style>
+</head>
+<body class="min-h-screen flex">
+  <aside class="w-64 shrink-0 panel border-r border-slate-800/80 p-4 flex flex-col justify-between">
+    <div>
+      <div class="pb-4 border-b border-slate-800/80">
+        <p class="text-sm font-semibold text-white">FinTrack Pro</p>
+        <p class="text-[11px] text-blue-400 uppercase tracking-wider">Empleado</p>
+      </div>
+      <div class="mt-4 text-xs text-slate-400 space-y-1">
+        <p class="text-white font-medium" id="empNombre">Empleado</p>
+        <p class="truncate" id="empEmail">sin sesión</p>
+      </div>
+    </div>
+    <button id="btnSalir" class="w-full py-2 rounded-lg bg-red-950/60 hover:bg-red-900/60 text-xs text-red-200 border border-red-800/50 cursor-pointer">Cerrar Sesión</button>
+  </aside>
+
+  <main class="flex-1 p-6 space-y-6 max-w-2xl">
+    <header class="panel rounded-xl p-5">
+      <h1 class="text-base font-semibold text-white">Panel del Empleado</h1>
+      <p class="text-xs text-slate-400">Registra tus gastos operativos con clasificación automática por tramo</p>
+    </header>
+    <div id="msg" class="hidden px-4 py-3 rounded-lg text-sm border"></div>
+
+    <section class="panel rounded-xl p-5">
+      <form id="formEmp" class="space-y-3">
+        <input id="deptoId" type="number" min="1" value="1" required placeholder="ID de departamento" class="input-dark w-full rounded-lg px-3 py-2 text-sm" />
+        <input id="monto" type="number" step="0.01" min="0.01" required placeholder="Monto del gasto" class="input-dark w-full rounded-lg px-3 py-2 text-sm" />
+        <p class="text-xs text-blue-300" id="tramoEmp">Tramo: DIMINUTO</p>
+        <input id="categoria" type="text" required placeholder="Categoría" class="input-dark w-full rounded-lg px-3 py-2 text-sm" />
+        <input id="descripcion" type="text" required placeholder="Descripción del gasto" class="input-dark w-full rounded-lg px-3 py-2 text-sm" />
+        <button type="submit" class="w-full rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium py-2.5 cursor-pointer">Enviar Gasto</button>
+      </form>
+    </section>
+  </main>
+
+  <script>
+    const TOKEN_KEY = "fintrack_token_empleado";
+    const USER_KEY = "fintrack_user_empleado";
+    const tramo = (m) => { const v = Math.abs(Number(m || 0)); return v < 15 ? "DIMINUTO" : v <= 100 ? "PEQUENO" : v <= 1000 ? "MEDIANO" : "GRANDE"; };
+    document.getElementById("monto").addEventListener("input", (e) => { document.getElementById("tramoEmp").textContent = `Tramo: ${tramo(e.target.value)}`; });
+    const u = JSON.parse(localStorage.getItem(USER_KEY) || "null");
+    if (u) { document.getElementById("empNombre").textContent = u.nombre || "Empleado"; document.getElementById("empEmail").textContent = u.email || ""; }
+
+    document.getElementById("formEmp").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const box = document.getElementById("msg");
+      const h = { "Content-Type": "application/json" };
+      const t = localStorage.getItem(TOKEN_KEY);
+      if (t) h["Authorization"] = `Bearer ${t}`;
+      const res = await fetch("/api/transacciones", { method: "POST", headers: h, body: JSON.stringify({ departamentoId: Number(document.getElementById("deptoId").value), tipo: "EGRESO", monto: Number(document.getElementById("monto").value), categoria: document.getElementById("categoria").value.trim(), descripcion: document.getElementById("descripcion").value.trim() }) });
+      if (!res.ok) { box.className = "px-4 py-3 rounded-lg text-sm border bg-red-950/70 border-red-800 text-red-200"; box.textContent = (await res.text()) || `HTTP ${res.status}`; return; }
+      box.className = "px-4 py-3 rounded-lg text-sm border bg-blue-950/70 border-blue-800 text-blue-200";
+      box.textContent = "Gasto registrado correctamente.";
+      e.target.reset();
+    });
+
+    document.getElementById("btnSalir").addEventListener("click", () => { localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(USER_KEY); window.location.href = "/empleado/login"; });
+  </script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FinTrack Pro · Notas del Sistema</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background-color: #070b12; color: #e2e8f0; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; }
+    .panel { background: linear-gradient(180deg, #0d1524 0%, #0a101b 100%); border: 1px solid #1b2a44; }
+  </style>
+</head>
+<body class="min-h-screen p-6 space-y-6">
+  <header class="panel rounded-xl p-5 flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <h1 class="text-base font-semibold text-white">Notas Técnicas · FinTrack Pro</h1>
+      <p class="text-xs text-slate-400">Resumen de arquitectura, tramos de gasto y rutas disponibles</p>
+    </div>
+    <div class="flex gap-2 text-xs">
+      <a href="/index.html" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white">Mapa MVC</a>
+      <a href="/admin.html" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-200">Admin</a>
+      <a href="/financiero.html" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-200">Financiero</a>
+      <a href="/empleado.html" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-200">Empleado</a>
+    </div>
+  </header>
+
+  <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="panel rounded-xl p-5 space-y-2 text-xs text-slate-300">
+      <h2 class="text-sm font-semibold text-white">Tramos de Clasificación de Gastos</h2>
+      <p><strong class="text-blue-300">DIMINUTO (&lt;$15):</strong> gastos hormiga, recargas o consumos mínimos.</p>
+      <p><strong class="text-blue-300">PEQUENO ($15–$100):</strong> gastos operativos diarios o reposiciones ligeras.</p>
+      <p><strong class="text-blue-300">MEDIANO ($100–$1,000):</strong> servicios, insumos o mantenimiento.</p>
+      <p><strong class="text-blue-300">GRANDE (&gt;$1,000):</strong> compras mayores o partidas con vigilancia reforzada.</p>
+    </div>
+    <div class="panel rounded-xl p-5 space-y-2 text-xs text-slate-300">
+      <h2 class="text-sm font-semibold text-white">Control Presupuestal</h2>
+      <p>• Alerta preventiva al alcanzar el <strong class="text-amber-300">80%</strong> del presupuesto mensual del departamento.</p>
+      <p>• Control al <strong class="text-rose-300">100%</strong> según la regla de sobregiro configurada por área.</p>
+      <p>• Vistas separadas por rol para mantener cada panel enfocado y limpio.</p>
+    </div>
+  </section>
+</body>
+</html>

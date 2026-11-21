@@ -1,175 +1,311 @@
 <!DOCTYPE html>
-<html lang="es" class="dark">
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FinTrack Pro | SaaS Control Financiero & IA</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FinTrack Pro - Control Global</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background-color: #070b12; color: #e2e8f0; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; }
+    .panel { background: linear-gradient(180deg, #0d1524 0%, #0a101b 100%); border: 1px solid #1b2a44; }
+    .input-dark { background-color: #070c15; border: 1px solid #223554; color: #f1f5f9; }
+  </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased">
+<body class="min-h-screen flex">
+  <aside class="w-64 shrink-0 panel border-r border-slate-800/80 p-4 flex flex-col justify-between">
+    <div class="space-y-4">
+      <div class="pb-4 border-b border-slate-800/80">
+        <p class="text-sm font-semibold text-white">FinTrack Pro</p>
+        <p class="text-[11px] text-blue-400 uppercase tracking-wider">Control Global</p>
+      </div>
+      <div class="space-y-1 text-xs">
+        <p class="px-2 text-[10px] uppercase tracking-wider text-slate-500">Accesos Dedicados</p>
+        <a href="/login-admin.html" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-slate-800/60">Login Administrador</a>
+        <a href="/login-financiero.html" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-slate-800/60">Login Financiero</a>
+        <a href="/login-empleado.html" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-slate-800/60">Login Usuario</a>
+        <p class="px-2 pt-3 text-[10px] uppercase tracking-wider text-slate-500">Dashboards</p>
+        <a href="/admin/dashboard" class="block px-3 py-2 rounded-lg text-slate-400 hover:text-blue-300">Dashboard Admin</a>
+        <a href="/financiero/dashboard" class="block px-3 py-2 rounded-lg text-slate-400 hover:text-blue-300">Dashboard Financiero</a>
+        <a href="/empleado/dashboard" class="block px-3 py-2 rounded-lg text-slate-400 hover:text-blue-300">Dashboard Usuario</a>
+        <a href="/notas.html" class="block px-3 py-2 rounded-lg text-slate-400 hover:text-blue-300">Notas del Sistema</a>
+      </div>
+    </div>
 
-    <!-- PANTALLA DE LOGIN STATELESS JWT -->
-    <div id="loginView" class="min-h-screen flex items-center justify-center p-4">
-        <div class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl">
-            <div class="flex items-center gap-3 mb-6">
-                <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-bold text-xl">F</div>
-                <div>
-                    <h1 class="text-xl font-bold tracking-tight text-white">FinTrack Pro</h1>
-                    <p class="text-xs text-slate-400">Arquitectura Hexagonal · JWT · Tool Calling IA</p>
-                </div>
-            </div>
+    <div class="space-y-2 pt-4 border-t border-slate-800/80">
+      <button id="btnDeshacer" disabled
+              class="w-full py-2 rounded-lg bg-amber-600/20 disabled:opacity-40 hover:bg-amber-600/30 text-xs text-amber-200 border border-amber-500/40 font-semibold cursor-pointer">
+        Deshacer (<span id="undoCount">0</span>)
+      </button>
+      <button id="btnRefrescar" class="w-full py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-white cursor-pointer">
+        Actualizar Todo
+      </button>
+    </div>
+  </aside>
 
-            <form id="loginForm" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-medium text-slate-400 mb-1">Correo Corporativo</label>
-                    <input id="emailInput" type="email" value="admin@fintrack.io" required
-                           class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-400 mb-1">Contraseña</label>
-                    <input id="passInput" type="password" value="admin123" required
-                           class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
-                </div>
-                <button type="submit"
-                        class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 rounded-lg transition text-sm">
-                    Iniciar Sesión con JWT
-                </button>
-            </form>
+  <main class="flex-1 p-6 space-y-6 overflow-x-hidden">
+    <header class="panel rounded-xl p-5 flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <h1 class="text-base font-semibold text-white">Centro de Control Global - FinTrack Pro</h1>
+        <p class="text-xs text-slate-400">Supervision total de cuentas, departamentos, transacciones y historial de hacer/deshacer</p>
+      </div>
+      <input id="buscador" type="text" placeholder="Filtrar cuentas, areas o movimientos..." class="input-dark w-72 rounded-lg px-3 py-1.5 text-sm" />
+    </header>
 
-            <div class="mt-6 pt-5 border-t border-slate-800">
-                <p class="text-xs text-slate-400 mb-2">Accesos rápidos por Rol (Rúbrica Semana 09):</p>
-                <div class="grid grid-cols-3 gap-2 text-xs">
-                    <button onclick="fillCreds('admin@fintrack.io','admin123')" class="bg-slate-800 hover:bg-slate-700 py-1.5 px-2 rounded text-emerald-400 font-medium">ADMIN</button>
-                    <button onclick="fillCreds('finanzas@fintrack.io','fin123')" class="bg-slate-800 hover:bg-slate-700 py-1.5 px-2 rounded text-sky-400 font-medium">FINANCIERO</button>
-                    <button onclick="fillCreds('empleado@fintrack.io','emp123')" class="bg-slate-800 hover:bg-slate-700 py-1.5 px-2 rounded text-amber-400 font-medium">EMPLEADO</button>
-                </div>
-            </div>
-            <p id="loginError" class="text-rose-400 text-xs mt-3 hidden"></p>
+    <div id="aviso" class="hidden px-4 py-3 rounded-lg text-xs border"></div>
+
+    <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div class="panel rounded-xl p-4"><p class="text-xs text-slate-400">Cuentas Registradas</p><p class="text-2xl font-semibold text-white mt-1" id="kCuentas">0</p></div>
+      <div class="panel rounded-xl p-4"><p class="text-xs text-slate-400">Departamentos</p><p class="text-2xl font-semibold text-blue-300 mt-1" id="kDeptos">0</p></div>
+      <div class="panel rounded-xl p-4"><p class="text-xs text-slate-400">Transacciones</p><p class="text-2xl font-semibold text-white mt-1" id="kTxs">0</p></div>
+      <div class="panel rounded-xl p-4"><p class="text-xs text-slate-400">Acciones Deshacibles</p><p class="text-2xl font-semibold text-amber-300 mt-1" id="kUndo">0</p></div>
+    </section>
+
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="panel rounded-xl p-5">
+        <h2 class="text-sm font-semibold text-white mb-3">Crear Departamento (Hacer)</h2>
+        <form id="formGlobalDepto" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <input id="gDeptoNombre" type="text" required placeholder="Departamento" class="input-dark rounded-lg px-3 py-2 text-xs" />
+          <input id="gDeptoPres" type="number" step="0.01" min="1" required placeholder="Presupuesto" class="input-dark rounded-lg px-3 py-2 text-xs" />
+          <button type="submit" class="rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold py-2 cursor-pointer">Crear</button>
+        </form>
+      </div>
+
+      <div class="panel rounded-xl p-5">
+        <h2 class="text-sm font-semibold text-white mb-3">Registrar Movimiento (Hacer)</h2>
+        <form id="formGlobalTx" class="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
+          <select id="gTxDepto" class="input-dark rounded-lg px-2.5 py-2 text-xs"></select>
+          <input id="gTxMonto" type="number" step="0.01" min="0.01" required placeholder="Monto" class="input-dark rounded-lg px-2.5 py-2 text-xs" />
+          <input id="gTxCat" type="text" required placeholder="Categoria" class="input-dark rounded-lg px-2.5 py-2 text-xs" />
+          <button type="submit" class="rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold py-2 cursor-pointer">Registrar</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="panel rounded-xl p-5">
+      <h2 class="text-sm font-semibold text-white mb-3">Cuentas Activas / Registradas</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="border-b border-slate-800 text-slate-400 uppercase">
+              <th class="py-2 px-3">ID</th><th class="py-2 px-3">Nombre</th><th class="py-2 px-3">Correo</th>
+              <th class="py-2 px-3">Rol</th><th class="py-2 px-3">Origen</th><th class="py-2 px-3 text-right">Control</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyCuentas" class="divide-y divide-slate-800/60 text-slate-300"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="panel rounded-xl p-5">
+        <h2 class="text-sm font-semibold text-white mb-3">Entidades: Departamentos</h2>
+        <div id="listaGlobalDeptos" class="space-y-2 text-xs"></div>
+      </div>
+      <div class="panel rounded-xl p-5">
+        <h2 class="text-sm font-semibold text-white mb-3">Entidades: Transacciones</h2>
+        <div id="listaGlobalTxs" class="space-y-2 text-xs"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    let cuentas = [], deptos = [], txs = [];
+    const undoStack = [];
+
+    const fmt = (n) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(Number(n || 0));
+    const showAviso = (txt, err = false) => {
+      const b = document.getElementById("aviso");
+      b.className = "px-4 py-3 rounded-lg text-xs border " + (err ? "bg-red-950/70 border-red-800 text-red-200" : "bg-blue-950/70 border-blue-800 text-blue-200");
+      b.textContent = txt;
+    };
+
+    const syncUndoUi = () => {
+      const n = undoStack.length;
+      document.getElementById("btnDeshacer").disabled = n === 0;
+      document.getElementById("undoCount").textContent = String(n);
+      document.getElementById("kUndo").textContent = String(n);
+    };
+
+    const pushUndo = (label, revertFn) => {
+      undoStack.push({ label, revertFn });
+      syncUndoUi();
+    };
+
+    function render() {
+      const q = (document.getElementById("buscador").value || "").toLowerCase();
+      const cFil = cuentas.filter(c => !q || (c.email || "").toLowerCase().includes(q) || (c.nombre || "").toLowerCase().includes(q) || (c.rol || "").toLowerCase().includes(q));
+      const dFil = deptos.filter(d => !q || (d.nombre || "").toLowerCase().includes(q));
+      const tFil = txs.filter(t => !q || (t.categoria || "").toLowerCase().includes(q) || (t.descripcion || "").toLowerCase().includes(q));
+
+      document.getElementById("kCuentas").textContent = String(cuentas.length);
+      document.getElementById("kDeptos").textContent = String(deptos.length);
+      document.getElementById("kTxs").textContent = String(txs.length);
+      syncUndoUi();
+
+      document.getElementById("gTxDepto").innerHTML = deptos.map(d => `<option value="${d.id}">${d.nombre}</option>`).join("") || `<option value="1">General</option>`;
+
+      document.getElementById("tbodyCuentas").innerHTML = cFil.map(c => `
+        <tr>
+          <td class="py-2 px-3">#${c.id}</td>
+          <td class="py-2 px-3 text-white font-medium">${c.nombre || "-"}</td>
+          <td class="py-2 px-3">${c.email}</td>
+          <td class="py-2 px-3">
+            <select data-id="${c.id}" class="sel-rol input-dark rounded px-2 py-1 text-xs">
+              <option value="ADMIN" ${c.rol === "ADMIN" ? "selected" : ""}>ADMIN</option>
+              <option value="FINANCIERO" ${c.rol === "FINANCIERO" ? "selected" : ""}>FINANCIERO</option>
+              <option value="EMPLEADO" ${c.rol === "EMPLEADO" ? "selected" : ""}>EMPLEADO</option>
+            </select>
+          </td>
+          <td class="py-2 px-3 text-slate-400">${c.proveedor || "LOCAL"}</td>
+          <td class="py-2 px-3 text-right">
+            <button data-del-cuenta="${c.id}" class="px-2.5 py-1 rounded bg-red-950/80 hover:bg-red-900 text-red-200 border border-red-800/60 cursor-pointer">Eliminar</button>
+          </td>
+        </tr>
+      `).join("") || `<tr><td colspan="6" class="py-4 px-3 text-slate-500">Sin cuentas registradas aun.</td></tr>`;
+
+      document.querySelectorAll(".sel-rol").forEach(sel => {
+        sel.addEventListener("change", async () => {
+          const id = Number(sel.dataset.id);
+          const item = cuentas.find(x => Number(x.id) === id);
+          const rolAnterior = item ? item.rol : "EMPLEADO";
+          const rolNuevo = sel.value;
+          await fetch(`/api/admin/global/cuentas/${id}/rol`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ rol: rolNuevo }) });
+          pushUndo(`Rol de ${cEmail(id)} (${rolAnterior})`, async () => {
+            await fetch(`/api/admin/global/cuentas/${id}/rol`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ rol: rolAnterior }) });
+          });
+          showAviso(`Rol actualizado a ${rolNuevo}.`);
+          cargarTodo();
+        });
+      });
+
+      document.querySelectorAll("[data-del-cuenta]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const id = Number(btn.dataset.delCuenta);
+          const snap = cuentas.find(x => Number(x.id) === id);
+          await fetch(`/api/admin/global/cuentas/${id}`, { method: "DELETE" });
+          if (snap) {
+            pushUndo(`Eliminar cuenta ${snap.email}`, async () => {
+              await fetch("/api/auth/cuenta/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: snap.email, nombre: snap.nombre, password: "RestoredPassword2026#", rol: snap.rol }) });
+            });
+          }
+          showAviso("Cuenta eliminada. Puedes usar Deshacer.");
+          cargarTodo();
+        });
+      });
+
+      document.getElementById("listaGlobalDeptos").innerHTML = dFil.map(d => `
+        <div class="p-3 rounded-lg bg-slate-950/80 border border-slate-800 flex items-center justify-between gap-2">
+          <div>
+            <p class="font-semibold text-white">${d.nombre} <span class="text-slate-500">#${d.id}</span></p>
+            <p class="text-slate-400">Limite: ${fmt(d.presupuestoMensual ?? d.presupuesto ?? 0)} · Gastado: ${fmt(d.gastoAcumulado ?? d.gastoActual ?? 0)}</p>
+          </div>
+          <button data-del-depto="${d.id}" class="px-2.5 py-1 rounded bg-red-950/80 hover:bg-red-900 text-red-200 border border-red-800/60 cursor-pointer">Eliminar</button>
         </div>
-    </div>
+      `).join("") || `<p class="text-slate-500">Sin departamentos.</p>`;
 
-    <!-- DASHBOARD PRINCIPAL SAAS -->
-    <div id="dashboardView" class="hidden">
-        <nav class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-10">
-            <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <span class="px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold text-sm">FinTrack Pro</span>
-                    <span id="userBadge" class="text-xs text-slate-400"></span>
-                </div>
-                <button onclick="logout()" class="text-xs bg-slate-800 hover:bg-rose-950 hover:text-rose-300 px-3 py-1.5 rounded-lg transition">
-                    Cerrar Sesión
-                </button>
-            </div>
-        </nav>
+      document.querySelectorAll("[data-del-depto]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const id = Number(btn.dataset.delDepto);
+          const snap = deptos.find(x => Number(x.id) === id);
+          await fetch(`/api/admin/global/departamentos/${id}`, { method: "DELETE" });
+          if (snap) {
+            pushUndo(`Eliminar depto ${snap.nombre}`, async () => {
+              await fetch("/api/departamentos", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ nombre: snap.nombre, presupuestoMensual: Number(snap.presupuestoMensual ?? snap.presupuesto ?? 1000), permitirSobregiro: Boolean(snap.permitirSobregiro) }) });
+            });
+          }
+          showAviso("Departamento eliminado.");
+          cargarTodo();
+        });
+      });
 
-        <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
-            <!-- Alerta Banner -->
-            <div id="alertBanner" class="hidden p-4 rounded-xl border text-sm font-medium"></div>
+      document.getElementById("listaGlobalTxs").innerHTML = tFil.map(t => `
+        <div class="p-3 rounded-lg bg-slate-950/80 border border-slate-800 flex items-center justify-between gap-2">
+          <div>
+            <p class="font-semibold text-white">${t.categoria || "Movimiento"} · ${fmt(t.monto)}</p>
+            <p class="text-slate-400">${t.tipo || "EGRESO"} · ${t.descripcion || "Sin descripcion"}</p>
+          </div>
+          <button data-del-tx="${t.id}" class="px-2.5 py-1 rounded bg-red-950/80 hover:bg-red-900 text-red-200 border border-red-800/60 cursor-pointer">Eliminar</button>
+        </div>
+      `).join("") || `<p class="text-slate-500">Sin transacciones.</p>`;
 
-            <!-- KPIs y Gráfico -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-5">
-                    <div class="flex items-center justify-between mb-4">
-                        <h2 class="text-base font-semibold text-white">Presupuestos por Departamento</h2>
-                        <span class="text-xs text-slate-400">Regla: Alerta 80% · Bloqueo 100%</span>
-                    </div>
-                    <div id="deptosGrid" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
-                </div>
+      document.querySelectorAll("[data-del-tx]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const id = Number(btn.dataset.delTx);
+          const snap = txs.find(x => Number(x.id) === id);
+          await fetch(`/api/admin/global/transacciones/${id}`, { method: "DELETE" });
+          if (snap) {
+            pushUndo(`Eliminar tx #${id}`, async () => {
+              await fetch("/api/transacciones", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ departamentoId: Number(snap.departamentoId || 1), tipo: snap.tipo || "EGRESO", monto: Number(snap.monto || 0), categoria: snap.categoria || "General", descripcion: snap.descripcion || "" }) });
+            });
+          }
+          showAviso("Transaccion eliminada.");
+          cargarTodo();
+        });
+      });
+    }
 
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between">
-                    <h2 class="text-base font-semibold text-white mb-2">Ejecución Presupuestaria</h2>
-                    <div class="h-48">
-                        <canvas id="budgetChart"></canvas>
-                    </div>
-                </div>
-            </div>
+    const cEmail = (id) => (cuentas.find(x => Number(x.id) === id)?.email) || ("#" + id);
 
-            <!-- Formularios: Transacciones + Nuevo Departamento (Admin) + Copiloto IA -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Registrar Transaccion -->
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-                    <h3 class="text-base font-semibold text-white mb-4">Registrar Movimiento</h3>
-                    <form id="txForm" class="space-y-3 text-sm">
-                        <select id="txDepto" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2"></select>
-                        <div class="grid grid-cols-2 gap-2">
-                            <select id="txTipo" class="bg-slate-950 border border-slate-800 rounded-lg px-3 py-2">
-                                <option value="EGRESO">EGRESO (Gasto)</option>
-                                <option value="INGRESO">INGRESO (Ampliación)</option>
-                            </select>
-                            <input id="txMonto" type="number" step="0.01" placeholder="Monto S/" required
-                                   class="bg-slate-950 border border-slate-800 rounded-lg px-3 py-2">
-                        </div>
-                        <input id="txCategoria" type="text" placeholder="Categoría (ej. Servidores, Marketing)" required
-                               class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2">
-                        <input id="txDesc" type="text" placeholder="Descripción del gasto" required
-                               class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2">
-                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 rounded-lg transition">
-                            Ejecutar Caso de Uso
-                        </button>
-                    </form>
-                </div>
+    async function cargarTodo() {
+      const [cR, dR, tR] = await Promise.all([
+        fetch("/api/admin/global/cuentas").catch(() => null),
+        fetch("/api/departamentos").catch(() => null),
+        fetch("/api/transacciones").catch(() => null)
+      ]);
+      cuentas = (cR && cR.ok) ? await cR.json() : [];
+      deptos = (dR && dR.ok) ? await dR.json() : [];
+      txs = (tR && tR.ok) ? await tR.json() : [];
+      render();
+    }
 
-                <!-- Crear Departamento (Solo ADMIN) -->
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-                    <h3 class="text-base font-semibold text-white mb-1">Nuevo Departamento</h3>
-                    <p class="text-xs text-slate-400 mb-4">Exclusivo para ROLE_ADMIN</p>
-                    <form id="deptoForm" class="space-y-3 text-sm">
-                        <input id="depNombre" type="text" placeholder="Nombre (ej. Ventas, TI)" required
-                               class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2">
-                        <input id="depPresupuesto" type="number" step="0.01" placeholder="Presupuesto Mensual S/" required
-                               class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2">
-                        <label class="flex items-center gap-2 text-xs text-slate-300">
-                            <input id="depBloquear" type="checkbox" checked class="accent-emerald-500">
-                            Bloquear egresos si supera el 100%
-                        </label>
-                        <button type="submit" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-semibold py-2 rounded-lg transition">
-                            Crear Departamento
-                        </button>
-                    </form>
-                </div>
+    document.getElementById("formGlobalDepto").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const nombre = document.getElementById("gDeptoNombre").value.trim();
+      const presupuestoMensual = Number(document.getElementById("gDeptoPres").value);
+      const res = await fetch("/api/departamentos", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ nombre, presupuestoMensual, permitirSobregiro: false }) });
+      if (res.ok) {
+        const creado = await res.json().catch(() => null);
+        if (creado && creado.id) {
+          pushUndo(`Crear depto ${nombre}`, async () => { await fetch(`/api/admin/global/departamentos/${creado.id}`, { method: "DELETE" }); });
+        }
+        e.target.reset();
+        showAviso("Departamento creado.");
+        cargarTodo();
+      } else {
+        showAviso("No se pudo crear el departamento (verifica permisos de /api/departamentos).", true);
+      }
+    });
 
-                <!-- Copiloto Financiero IA (Tool Calling) -->
-                <div class="bg-slate-900 border border-emerald-500/30 rounded-2xl p-5 flex flex-col justify-between">
-                    <div>
-                        <div class="flex items-center justify-between mb-2">
-                            <h3 class="text-base font-semibold text-emerald-400">Copiloto Financiero IA</h3>
-                            <span class="text-[10px] uppercase tracking-wider bg-emerald-500/10 text-emerald-300 px-2 py-0.5 rounded">Tool Calling</span>
-                        </div>
-                        <div id="aiResponseBox" class="bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-300 h-36 overflow-y-auto whitespace-pre-line">
-                            Pregunta qué departamento está cerca de agotar su presupuesto este mes...
-                        </div>
-                    </div>
-                    <form id="aiForm" class="mt-3 flex gap-2">
-                        <input id="aiPrompt" type="text" value="¿Qué departamento está cerca de agotar su presupuesto este mes?"
-                               class="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs">
-                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 px-3 py-2 rounded-lg text-xs font-semibold">
-                            Consultar
-                        </button>
-                    </form>
-                </div>
-            </div>
+    document.getElementById("formGlobalTx").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const departamentoId = Number(document.getElementById("gTxDepto").value || 1);
+      const monto = Number(document.getElementById("gTxMonto").value);
+      const categoria = document.getElementById("gTxCat").value.trim();
+      const res = await fetch("/api/transacciones", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ departamentoId, tipo: "EGRESO", monto, categoria, descripcion: "Control global" }) });
+      if (res.ok) {
+        const creada = await res.json().catch(() => null);
+        if (creada && creada.id) {
+          pushUndo(`Crear tx ${categoria}`, async () => { await fetch(`/api/admin/global/transacciones/${creada.id}`, { method: "DELETE" }); });
+        }
+        e.target.reset();
+        showAviso("Transaccion registrada.");
+        cargarTodo();
+      } else {
+        showAviso("No se pudo registrar la transaccion.", true);
+      }
+    });
 
-            <!-- Historial de Transacciones -->
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 overflow-x-auto">
-                <h3 class="text-base font-semibold text-white mb-4">Historial de Transacciones</h3>
-                <table class="w-full text-left text-xs">
-                    <thead class="text-slate-400 border-b border-slate-800">
-                        <tr>
-                            <th class="pb-2">Departamento</th>
-                            <th class="pb-2">Tipo</th>
-                            <th class="pb-2">Categoría</th>
-                            <th class="pb-2">Descripción</th>
-                            <th class="pb-2">Monto</th>
-                            <th class="pb-2">Alerta Dominio</th>
-                        </tr>
-                    </thead>
-                    <tbody id="txTableBody" class="divide-y divide-slate-800/60"></tbody>
-                </table>
-            </div>
-        </main>
-    </div>
+    document.getElementById("btnDeshacer").addEventListener("click", async () => {
+      const last = undoStack.pop();
+      if (!last) return;
+      await last.revertFn();
+      showAviso(`Deshecho: ${last.label}`);
+      cargarTodo();
+    });
 
-    <script src="/app.js"></script>
+    document.getElementById("btnRefrescar").addEventListener("click", cargarTodo);
+    document.getElementById("buscador").addEventListener("input", render);
+    cargarTodo();
+  </script>
 </body>
 </html>
