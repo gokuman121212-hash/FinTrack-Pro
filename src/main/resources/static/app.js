@@ -251,6 +251,26 @@
     `;
 
     document.body.appendChild(container);
+    const navBar = document.createElement("div");
+    navBar.style.cssText = "display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;";
+    const vistas = [
+      ["Inicio", "/index.html"],
+      ["Admin", "/admin.html"],
+      ["Financiero", "/financiero.html"],
+      ["Empleado", "/empleado.html"],
+      ["Notas", "/notas.html"]
+    ];
+    vistas.forEach(([label, href]) => {
+      const a = document.createElement("a");
+      a.href = href;
+      a.textContent = label;
+      const active = location.pathname.endsWith(href);
+      a.style.cssText = active
+        ? "padding:5px 10px;border-radius:7px;font-size:12px;font-weight:700;text-decoration:none;background:#7c3aed;color:#fff;"
+        : "padding:5px 10px;border-radius:7px;font-size:12px;font-weight:600;text-decoration:none;background:rgba(139,92,246,0.14);color:#e9d5ff;border:1px solid rgba(168,85,247,0.3);";
+      navBar.appendChild(a);
+    });
+    container.insertBefore(navBar, container.firstChild);
 
     const montoInput = document.getElementById("ft-in-monto");
     const tramoPreview = document.getElementById("ft-tramo-preview");

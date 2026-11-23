@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: fintrack-pro
+    runtime: docker
+    plan: free
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: local-db
+      - key: SPRING_SQL_INIT_MODE
+        value: never

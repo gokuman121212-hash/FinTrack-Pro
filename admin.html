@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            obsidian: "#090D16",
+            slatebase: "#0F172A",
+            slatepanel: "#131E33",
+            slateborder: "#1E293B",
+            cobalt: "#1D4ED8",
+            cobaltlight: "#3B82F6",
+            ice: "#E2E8F0",
+            muted: "#94A3B8"
+          }
+        }
+      }
+    }
+  </script>
+</head><title>FinTrack Pro — Portal Admin (Puerto 8081)</title>
+<body class="bg-obsidian text-ice min-h-screen flex">
+  <aside class="w-64 shrink-0 bg-slatebase border-r border-slateborder flex flex-col justify-between p-5">
+    <div class="space-y-6">
+      <div class="border-b border-slateborder pb-4">
+        <p class="text-[11px] font-mono uppercase tracking-wider text-cobaltlight">Puerto 8081</p>
+        <h1 class="text-lg font-semibold text-white mt-0.5">FinTrack Admin</h1>
+      </div>
+      <nav class="space-y-1 text-sm">
+        <button onclick="mostrarSec('sec-resumen')" class="w-full text-left px-3 py-2 rounded-md bg-slatepanel text-white font-medium border border-slateborder">Resumen y Búsqueda</button>
+        <button onclick="mostrarSec('sec-alta')" class="w-full text-left px-3 py-2 rounded-md text-muted hover:text-white hover:bg-slatepanel transition">Crear Departamento</button>
+        <button onclick="mostrarSec('sec-cartera')" class="w-full text-left px-3 py-2 rounded-md text-muted hover:text-white hover:bg-slatepanel transition">Cartera de Áreas</button>
+      </nav>
+    </div>
+    <div class="border-t border-slateborder pt-4 text-xs text-muted space-y-1">
+      <p class="font-mono text-ice/80">ADMIN · JWT</p>
+      <p id="sideAdminEstado" class="text-muted">Sesión no iniciada</p>
+    </div>
+  </aside>
+
+  <div class="flex-1 flex flex-col min-w-0">
+    <header class="bg-slatebase border-b border-slateborder px-8 py-4 flex items-center justify-between">
+      <div>
+        <h2 class="text-base font-semibold text-white">Control de Departamentos y Presupuestos</h2>
+        <p class="text-xs text-muted">Acceso exclusivo credenciales administrativas</p>
+      </div>
+      <button onclick="cerrarSesionAdmin()" class="text-xs px-3 py-1.5 rounded-md border border-slateborder text-muted hover:text-white">Cerrar sesión</button>
+    </header>
+
+    <!-- Login Gate -->
+    <section id="loginGateAdmin" class="flex-1 flex items-center justify-center p-8">
+      <form id="formLoginAdmin" class="w-full max-w-md bg-slatebase border border-slateborder rounded-md p-7 space-y-4">
+        <div>
+          <p class="text-xs font-mono text-cobaltlight">PORTAL ADMINISTRATIVO · :8081</p>
+          <h3 class="text-xl font-semibold text-white mt-1">Iniciar sesión</h3>
+        </div>
+        <div class="space-y-1">
+          <label class="text-xs text-muted">Correo corporativo</label>
+          <input id="admUser" type="email" required placeholder="usuario@empresa.com" class="w-full bg-obsidian border border-slateborder rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-cobaltlight" />
+        </div>
+        <div class="space-y-1">
+          <label class="text-xs text-muted">Contraseña</label>
+          <input id="admPass" type="password" required placeholder="••••••••" class="w-full bg-obsidian border border-slateborder rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-cobaltlight" />
+        </div>
+        <p id="admErr" class="text-xs text-rose-400 hidden"></p>
+        <button type="submit" class="w-full bg-cobalt hover:bg-cobaltlight text-white text-sm font-medium py-2.5 rounded-md transition">Ingresar al sistema</button>
+      </form>
+    </section>
+
+    <!-- Workspace Autenticado -->
+    <main id="workAdmin" class="hidden flex-1 p-8 space-y-6">
+      <div id="sec-resumen" class="space-y-6">
+        <div class="bg-slatebase border border-slateborder rounded-md p-5">
+          <h3 class="text-sm font-semibold text-white mb-3">Panel de Búsqueda de Departamentos</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <input id="admBuscar" oninput="renderAdmin()" placeholder="Buscar por nombre o ID..." class="bg-obsidian border border-slateborder rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-cobaltlight" />
+            <select id="admFiltroEstado" onchange="renderAdmin()" class="bg-obsidian border border-slateborder rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-cobaltlight">
+              <option value="TODAS">Todos los estados</option>
+              <option value="NORMAL">NORMAL</option>
+              <option value="ALERTA">ALERTA (&ge;80%)</option>
+              <option value="SOBREGIRO">SOBREGIRO (&gt;100%)</option>
+            </select>
+            <button onclick="cargarAdmin()" class="bg-slatepanel hover:bg-cobalt border border-slateborder rounded-md px-4 py-2 text-sm font-medium text-white transition">Actualizar datos</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="bg-slatebase border border-slateborder rounded-md p-4">
+            <p class="text-xs text-muted">Presupuesto Total</p>
+            <p id="admKpiPres" class="text-xl font-semibold text-white mt-1">S/ 0.00</p>
+          </div>
+          <div class="bg-slatebase border border-slateborder rounded-md p-4">
+            <p class="text-xs text-muted">Gasto Acumulado</p>
+            <p id="admKpiGas" class="text-xl font-semibold text-cobaltlight mt-1">S/ 0.00</p>
+          </div>
+          <div class="bg-slatebase border border-slateborder rounded-md p-4">
+            <p class="text-xs text-muted">Saldo Disponible</p>
+            <p id="admKpiSal" class="text-xl font-semibold text-white mt-1">S/ 0.00</p>
+          </div>
+          <div class="bg-slatebase border border-slateborder rounded-md p-4">
+            <p class="text-xs text-muted">Áreas en Alerta</p>
+            <p id="admKpiAle" class="text-xl font-semibold text-amber-400 mt-1">0</p>
+          </div>
+        </div>
+      </div>
+
+      <div id="sec-alta" class="bg-slatebase border border-slateborder rounded-md p-5">
+        <h3 class="text-sm font-semibold text-white mb-4">Registrar Nuevo Departamento</h3>
+        <form id="formAdmDepto" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <input id="admNom" required placeholder="Nombre del departamento" class="bg-obsidian border border-slateborder rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-cobaltlight" />
+          <input id="admMonto" type="number" step="0.01" min="1" required placeholder="Presupuesto mensual (S/)" class="bg-obsidian border border-slateborder rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-cobaltlight" />
+          <button type="submit" class="bg-cobalt hover:bg-cobaltlight text-white text-sm font-medium rounded-md px-4 py-2 transition">Guardar departamento</button>
+        </form>
+      </div>
+
+      <div id="sec-cartera" class="bg-slatebase border border-slateborder rounded-md p-5">
+        <h3 class="text-sm font-semibold text-white mb-4">Listado de Departamentos</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="border-b border-slateborder text-muted">
+                <th class="py-2.5 px-3">ID</th>
+                <th class="py-2.5 px-3">Departamento</th>
+                <th class="py-2.5 px-3">Presupuesto</th>
+                <th class="py-2.5 px-3">Gastado</th>
+                <th class="py-2.5 px-3">Saldo</th>
+                <th class="py-2.5 px-3">Uso %</th>
+                <th class="py-2.5 px-3">Estado</th>
+              </tr>
+            </thead>
+            <tbody id="admTabla" class="divide-y divide-slateborder"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    let tokenAdm = sessionStorage.getItem("jwt_p8081") || "";
+    let datosAdm = [];
+
+    function mostrarSec(id) {
+      document.getElementById(id).scrollIntoView({ behavior: "smooth" });
+    }
+
+    function activarSesionAdm() {
+      document.getElementById("loginGateAdmin").classList.add("hidden");
+      document.getElementById("workAdmin").classList.remove("hidden");
+      document.getElementById("sideAdminEstado").textContent = "Autenticado";
+      cargarAdmin();
+    }
+
+    function cerrarSesionAdmin() {
+      sessionStorage.removeItem("jwt_p8081");
+      tokenAdm = "";
+      location.reload();
+    }
+
+    document.getElementById("formLoginAdmin").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const err = document.getElementById("admErr");
+      err.classList.add("hidden");
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: document.getElementById("admUser").value,
+          password: document.getElementById("admPass").value,
+          expectedRole: "ADMIN"
+        })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.token) {
+        err.textContent = data.error || "Acceso denegado.";
+        err.classList.remove("hidden");
+        return;
+      }
+      tokenAdm = data.token;
+      sessionStorage.setItem("jwt_p8081", tokenAdm);
+      activarSesionAdm();
+    });
+
+    async function cargarAdmin() {
+      const res = await fetch("/api/departamentos", { headers: { Authorization: "Bearer " + tokenAdm } });
+      if (!res.ok) return;
+      datosAdm = await res.json();
+      const pres = datosAdm.reduce((s, d) => s + Number(d.presupuestoMensual || 0), 0);
+      const gas = datosAdm.reduce((s, d) => s + Number(d.gastoAcumulado || 0), 0);
+      const sal = datosAdm.reduce((s, d) => s + Number(d.saldoDisponible || 0), 0);
+      const ale = datosAdm.filter(d => String(d.alerta).includes("ALERTA") || String(d.alerta).includes("SOBREGIRO")).length;
+      document.getElementById("admKpiPres").textContent = "S/ " + pres.toFixed(2);
+      document.getElementById("admKpiGas").textContent = "S/ " + gas.toFixed(2);
+      document.getElementById("admKpiSal").textContent = "S/ " + sal.toFixed(2);
+      document.getElementById("admKpiAle").textContent = String(ale);
+      renderAdmin();
+    }
+
+    function renderAdmin() {
+      const q = document.getElementById("admBuscar").value.toLowerCase().trim();
+      const est = document.getElementById("admFiltroEstado").value;
+      const list = datosAdm.filter(d => {
+        const okQ = !q || String(d.departamentoNombre).toLowerCase().includes(q) || String(d.departamentoId).includes(q);
+        const okE = est === "TODAS" || String(d.alerta).includes(est);
+        return okQ && okE;
+      });
+      document.getElementById("admTabla").innerHTML = list.map(d => `
+        <tr>
+          <td class="py-2.5 px-3 font-mono">#${d.departamentoId}</td>
+          <td class="py-2.5 px-3 font-medium text-white">${d.departamentoNombre}</td>
+          <td class="py-2.5 px-3">S/ ${Number(d.presupuestoMensual).toFixed(2)}</td>
+          <td class="py-2.5 px-3 text-cobaltlight">S/ ${Number(d.gastoAcumulado).toFixed(2)}</td>
+          <td class="py-2.5 px-3 text-white">S/ ${Number(d.saldoDisponible).toFixed(2)}</td>
+          <td class="py-2.5 px-3 font-mono">${Number(d.porcentajeUsado).toFixed(2)}%</td>
+          <td class="py-2.5 px-3 font-mono text-amber-300">${d.alerta}</td>
+        </tr>
+      `).join("") || `<tr><td colspan="7" class="py-4 text-center text-muted">Sin resultados.</td></tr>`;
+    }
+
+    document.getElementById("formAdmDepto").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const res = await fetch("/api/departamentos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + tokenAdm },
+        body: JSON.stringify({
+          nombre: document.getElementById("admNom").value,
+          presupuestoMensual: document.getElementById("admMonto").value
+        })
+      });
+      const data = await res.json();
+      alert(data.error || "Departamento registrado.");
+      e.target.reset();
+      cargarAdmin();
+    });
+
+    if (tokenAdm) activarSesionAdm();
+  </script>
+<script src="app.js"></script>
+</body>
+</html>

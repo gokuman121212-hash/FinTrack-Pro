@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FinTrack Pro — Bloc de Notas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            obsidian: "#090D16",
+            slatebase: "#0F172A",
+            slatepanel: "#131E33",
+            slateborder: "#1E293B",
+            cobalt: "#1D4ED8",
+            cobaltlight: "#3B82F6",
+            ice: "#E2E8F0",
+            muted: "#94A3B8"
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-obsidian text-ice min-h-screen flex">
+  <aside class="w-64 shrink-0 bg-slatebase border-r border-slateborder flex flex-col justify-between p-5">
+    <div class="space-y-6">
+      <div class="border-b border-slateborder pb-4">
+        <p class="text-[11px] font-mono uppercase tracking-wider text-cobaltlight">FinTrack Pro</p>
+        <h1 class="text-lg font-semibold text-white mt-0.5">Bloc de Notas</h1>
+      </div>
+      <nav class="space-y-1 text-sm">
+        <button onclick="irSeccion('sec-links')" class="w-full text-left px-3 py-2 rounded-md bg-slatepanel text-white font-medium border border-slateborder">Enlaces de Vistas</button>
+        <button onclick="irSeccion('sec-notas')" class="w-full text-left px-3 py-2 rounded-md text-muted hover:text-white hover:bg-slatepanel transition">Notas Editables</button>
+      </nav>
+    </div>
+    <div class="border-t border-slateborder pt-4 text-xs text-muted">
+      <p id="hostActual" class="font-mono break-all text-cobaltlight"></p>
+    </div>
+  </aside>
+
+  <main class="flex-1 p-8 space-y-6">
+    <div id="sec-links" class="bg-slatebase border border-slateborder rounded-md p-6 space-y-4">
+      <h2 class="text-base font-semibold text-white">Cómo Abrir Cada Dashboard (Local o ngrok)</h2>
+      <p class="text-xs text-muted">Estos enlaces se adaptan automáticamente a tu URL actual (localhost o túnel ngrok):</p>
+      <div id="listaLinks" class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs font-mono"></div>
+    </div>
+
+    <div id="sec-notas" class="bg-slatebase border border-slateborder rounded-md p-6 space-y-3">
+      <div class="flex items-center justify-between">
+        <h2 class="text-base font-semibold text-white">Bloc de Notas del Proyecto</h2>
+        <span id="stNota" class="text-xs font-mono text-muted">Listo</span>
+      </div>
+      <textarea id="txtNota" rows="14" class="w-full bg-obsidian border border-slateborder rounded-md p-3.5 text-xs font-mono text-ice focus:outline-none focus:border-cobaltlight"></textarea>
+      <div class="flex gap-2">
+        <button onclick="guardarNota()" class="bg-cobalt hover:bg-cobaltlight text-white text-xs font-medium px-4 py-2 rounded-md">Guardar</button>
+        <button onclick="copiarNota()" class="bg-slatepanel hover:bg-cobalt border border-slateborder text-white text-xs font-medium px-4 py-2 rounded-md">Copiar</button>
+        <button onclick="bajarNota()" class="bg-slatepanel hover:bg-cobalt border border-slateborder text-white text-xs font-medium px-4 py-2 rounded-md">Descargar .md</button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const baseUrl = window.location.origin;
+    document.getElementById("hostActual").textContent = baseUrl;
+
+    const vistas = [
+      { nombre: "Dashboard Admin", ruta: "/admin.html" },
+      { nombre: "Dashboard Financiero", ruta: "/financiero.html" },
+      { nombre: "Dashboard Empleado", ruta: "/empleado.html" },
+      { nombre: "Bloc de Notas", ruta: "/notas.html" }
+    ];
+
+    document.getElementById("listaLinks").innerHTML = vistas.map(v => {
+      const full = baseUrl + v.ruta;
+      return `
+        <div class="bg-obsidian border border-slateborder rounded-md p-3.5 flex items-center justify-between gap-2">
+          <span class="truncate">${v.nombre}: ${full}</span>
+          <a href="${v.ruta}" class="shrink-0 font-sans font-medium text-cobaltlight hover:underline">Abrir</a>
+        </div>
+      `;
+    }).join("");
+
+    const KEY = "fintrack_pro_notas_unificado";
+    const area = document.getElementById("txtNota");
+    const st = document.getElementById("stNota");
+    area.value = localStorage.getItem(KEY) || [
+      "# FinTrack Pro - Enlaces",
+      "Admin:      " + baseUrl + "/admin.html",
+      "Financiero: " + baseUrl + "/financiero.html",
+      "Empleado:   " + baseUrl + "/empleado.html",
+      "Bloc Notas: " + baseUrl + "/notas.html"
+    ].join("\n");
+
+    function irSeccion(id) { document.getElementById(id).scrollIntoView({ behavior: "smooth" }); }
+    function guardarNota() {
+      localStorage.setItem(KEY, area.value);
+      st.textContent = "Guardado";
+      setTimeout(() => (st.textContent = "Listo"), 2000);
+    }
+    function copiarNota() {
+      navigator.clipboard.writeText(area.value);
+      st.textContent = "Copiado";
+      setTimeout(() => (st.textContent = "Listo"), 2000);
+    }
+    function bajarNota() {
+      const blob = new Blob([area.value], { type: "text/markdown;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "fintrack-pro-notas.md";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+<script src="app.js"></script>
+</body>
+</html>
