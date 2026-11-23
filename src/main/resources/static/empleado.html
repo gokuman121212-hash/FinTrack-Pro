@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            obsidian: "#090D16",
+            slatebase: "#0F172A",
+            slatepanel: "#131E33",
+            slateborder: "#1E293B",
+            cobalt: "#1D4ED8",
+            cobaltlight: "#3B82F6",
+            ice: "#E2E8F0",
+            muted: "#94A3B8"
+          }
+        }
+      }
+    }
+  </script>
+</head><title>FinTrack Pro — Portal Empleado (Puerto 8083)</title>
+<body class="bg-obsidian text-ice min-h-screen flex">
+  <aside class="w-64 shrink-0 bg-slatebase border-r border-slateborder flex flex-col justify-between p-5">
+    <div class="space-y-6">
+      <div class="border-b border-slateborder pb-4">
+        <p class="text-[11px] font-mono uppercase tracking-wider text-cobaltlight">Puerto 8083</p>
+        <h1 class="text-lg font-semibold text-white mt-0.5">FinTrack Empleado</h1>
+      </div>
+      <nav class="space-y-1 text-sm">
+        <button onclick="irEmp('emp-gasto')" class="w-full text-left px-3 py-2 rounded-md bg-slatepanel text-white font-medium border border-slateborder">Registrar Gasto</button>
+        <button onclick="irEmp('emp-consulta')" class="w-full text-left px-3 py-2 rounded-md text-muted hover:text-white hover:bg-slatepanel transition">Consulta y Búsqueda</button>
+      </nav>
+    </div>
+    <div class="border-t border-slateborder pt-4 text-xs text-muted space-y-1">
+      <p class="font-mono text-ice/80">EMPLEADO · JWT</p>
+      <p id="sideEmpEstado" class="text-muted">Sesión no iniciada</p>
+    </div>
+  </aside>
+
+  <div class="flex-1 flex flex-col min-w-0">
+    <header class="bg-slatebase border-b border-slateborder px-8 py-4 flex items-center justify-between">
+      <div>
+        <h2 class="text-base font-semibold text-white">Gastos Operativos y Consulta de Presupuesto</h2>
+        <p class="text-xs text-muted">Acceso exclusivo credenciales de empleado</p>
+      </div>
+      <button onclick="cerrarEmp()" class="text-xs px-3 py-1.5 rounded-md border border-slateborder text-muted hover:text-white">Cerrar sesión</button>
+    </header>
+
+    <section id="loginGateEmp" class="flex-1 flex items-center justify-center p-8">
+      <form id="formLoginEmp" class="w-full max-w-md bg-slatebase border border-slateborder rounded-md p-7 space-y-4">
+        <div>
+          <p class="text-xs font-mono text-cobaltlight">PORTAL EMPLEADO · :8083</p>
+          <h3 class="text-xl font-semibold text-white mt-1">Iniciar sesión</h3>
+        </div>
+        <div class="space-y-1">
+          <label class="text-xs text-muted">Correo corporativo</label>
+          <input id="empUser" type="email" required placeholder="usuario@empresa.com" class="w-full bg-obsidian border border-slateborder rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-cobaltlight" />
+        </div>
+        <div class="space-y-1">
+          <label class="text-xs text-muted">Contraseña</label>
+          <input id="empPass" type="password" required placeholder="••••••••" class="w-full bg-obsidian border border-slateborder rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-cobaltlight" />
+        </div>
+        <p id="empErr" class="text-xs text-rose-400 hidden"></p>
+        <button type="submit" class="w-full bg-cobalt hover:bg-cobaltlight text-white text-sm font-medium py-2.5 rounded-md transition">Ingresar al sistema</button>
+      </form>
+    </section>
+
+    <main id="workEmp" class="hidden flex-1 p-8 space-y-6">
+      <div id="emp-gasto" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <form id="formEmpGasto" class="bg-slatebase border border-slateborder rounded-md p-5 space-y-3">
+          <h3 class="text-sm font-semibold text-white">Registrar Gasto del Área</h3>
+          <div class="grid grid-cols-2 gap-3">
+            <input id="empDeptoId" type="number" min="1" value="1" onchange="cargarEmp()" required class="bg-obsidian border border-slateborder rounded-md px-3 py-2 text-sm text-white" />
+            <input id="empMonto" type="number" step="0.01" min="0.01" required placeholder="Monto (S/)" class="bg-obsidian border border-slateborder rounded-md px-3 py-2 text-sm text-white" />
+          </div>
+          <input id="empCat" required placeholder="Categoría (ej. Viáticos, Insumos)" class="w-full bg-obsidian border border-slateborder rounded-md px-3 py-2 text-sm text-white" />
+          <input id="empDesc" required placeholder="Descripción del gasto" class="w-full bg-obsidian border border-slateborder rounded-md px-3 py-2 text-sm text-white" />
+          <button type="submit" class="w-full bg-cobalt hover:bg-cobaltlight text-white text-sm font-medium py-2.5 rounded-md transition">Enviar gasto</button>
+        </form>
+
+        <div class="bg-slatebase border border-slateborder rounded-md p-5 space-y-3">
+          <h3 class="text-sm font-semibold text-white">Estado Presupuestario del Departamento</h3>
+          <div id="empResumenDepto" class="bg-obsidian border border-slateborder rounded-md p-4 text-xs space-y-2 text-ice"></div>
+        </div>
+      </div>
+
+      <div id="emp-consulta" class="bg-slatebase border border-slateborder rounded-md p-5 space-y-4">
+        <h3 class="text-sm font-semibold text-white">Panel de Búsqueda en Movimientos del Área</h3>
+        <input id="empBuscar" oninput="renderEmpTx()" placeholder="Buscar por categoría o descripción..." class="w-full md:w-96 bg-obsidian border border-slateborder rounded-md px-3 py-2 text-sm text-white" />
+        <ul id="empListaTx" class="divide-y divide-slateborder text-xs"></ul>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    let tokenEmp = sessionStorage.getItem("jwt_p8083") || "";
+    let txEmp = [];
+
+    function irEmp(id) { document.getElementById(id).scrollIntoView({ behavior: "smooth" }); }
+    function cerrarEmp() { sessionStorage.removeItem("jwt_p8083"); location.reload(); }
+
+    function activarEmp() {
+      document.getElementById("loginGateEmp").classList.add("hidden");
+      document.getElementById("workEmp").classList.remove("hidden");
+      document.getElementById("sideEmpEstado").textContent = "Autenticado";
+      cargarEmp();
+    }
+
+    document.getElementById("formLoginEmp").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const err = document.getElementById("empErr");
+      err.classList.add("hidden");
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: document.getElementById("empUser").value,
+          password: document.getElementById("empPass").value,
+          expectedRole: "EMPLEADO"
+        })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.token) {
+        err.textContent = data.error || "Credenciales inválidas.";
+        err.classList.remove("hidden");
+        return;
+      }
+      tokenEmp = data.token;
+      sessionStorage.setItem("jwt_p8083", tokenEmp);
+      activarEmp();
+    });
+
+    async function cargarEmp() {
+      const id = document.getElementById("empDeptoId").value;
+      const r1 = await fetch(`/api/departamentos/${id}/presupuesto`, { headers: { Authorization: "Bearer " + tokenEmp } });
+      const d = await r1.json();
+      if (!d.error) {
+        document.getElementById("empResumenDepto").innerHTML = `
+          <p><strong>Departamento:</strong> ${d.departamentoNombre} (#${d.departamentoId})</p>
+          <p><strong>Presupuesto mensual:</strong> S/ ${Number(d.presupuestoMensual).toFixed(2)}</p>
+          <p><strong>Gasto acumulado:</strong> S/ ${Number(d.gastoAcumulado).toFixed(2)}</p>
+          <p><strong>Saldo disponible:</strong> S/ ${Number(d.saldoDisponible).toFixed(2)}</p>
+          <p><strong>Porcentaje usado:</strong> ${Number(d.porcentajeUsado).toFixed(2)}% · <span class="text-amber-300 font-mono">${d.alerta}</span></p>
+        `;
+      }
+      const r2 = await fetch("/api/transacciones", { headers: { Authorization: "Bearer " + tokenEmp } });
+      if (r2.ok) {
+        const all = await r2.json();
+        txEmp = all.filter(t => String(t.departamentoId) === String(id)).reverse();
+        renderEmpTx();
+      }
+    }
+
+    function renderEmpTx() {
+      const q = document.getElementById("empBuscar").value.toLowerCase().trim();
+      const items = txEmp.filter(t => !q || String(t.categoria || "").toLowerCase().includes(q) || String(t.descripcion || "").toLowerCase().includes(q));
+      document.getElementById("empListaTx").innerHTML = items.map(t => `
+        <li class="py-2.5 flex justify-between items-center">
+          <span><strong class="text-white">${t.tipo}</strong> · <span class="text-cobaltlight">${t.categoria}</span> — ${t.descripcion || "-"}</span>
+          <span class="font-mono text-white">S/ ${Number(t.monto).toFixed(2)}</span>
+        </li>
+      `).join("") || `<li class="py-3 text-muted">Sin movimientos registrados.</li>`;
+    }
+
+    document.getElementById("formEmpGasto").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const res = await fetch("/api/transacciones", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + tokenEmp },
+        body: JSON.stringify({
+          departamentoId: document.getElementById("empDeptoId").value,
+          tipo: "EGRESO",
+          monto: document.getElementById("empMonto").value,
+          categoria: document.getElementById("empCat").value,
+          descripcion: document.getElementById("empDesc").value
+        })
+      });
+      const data = await res.json();
+      alert(data.error || "Gasto registrado.");
+      e.target.reset();
+      cargarEmp();
+    });
+
+    if (tokenEmp) activarEmp();
+  </script>
+<script src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+services:
+  fintrack-db:
+    image: postgres:16-alpine
+    container_name: fintrack-postgres
+    environment:
+      POSTGRES_DB: fintrack_pro
+      POSTGRES_USER: fintrack_user
+      POSTGRES_PASSWORD: fintrack_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - fintrack_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fintrack_user -d fintrack_pro"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  fintrack-api:
+    build: .
+    container_name: fintrack-pro-api
+    depends_on:
+      fintrack-db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: postgres
+      SPRING_DATASOURCE_URL: jdbc:postgresql://fintrack-db:5432/fintrack_pro
+      SPRING_DATASOURCE_USERNAME: fintrack_user
+      SPRING_DATASOURCE_PASSWORD: fintrack_pass
+      SERVER_PORT: 8080
+    ports:
+      - "8080:8080"
+
+volumes:
+  fintrack_pg_data:

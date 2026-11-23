@@ -1,0 +1,43 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  profiles:
+    default: local-db
+  jpa:
+    hibernate:
+      ddl-auto: update
+    defer-datasource-initialization: true
+    show-sql: false
+  sql:
+    init:
+      mode: always
+
+jwt:
+  secret: ${JWT_SECRET:FinTrackProClaveSecretaSuperSeguraDeAlMenos32Caracteres2026!}
+  expiration-ms: 86400000
+
+llm:
+  url: ${LLM_URL:http://localhost:11434/v1/chat/completions}
+  api-key: ${LLM_API_KEY:local-dev-key}
+  model: ${LLM_MODEL:qwen2.5-coder:7b}
+---
+spring:
+  config:
+    activate:
+      on-profile: local-db
+  datasource:
+    url: jdbc:h2:file:./data/fintrack_relacional;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+---
+spring:
+  config:
+    activate:
+      on-profile: postgres
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/fintrack_pro}
+    driver-class-name: org.postgresql.Driver
+    username: ${SPRING_DATASOURCE_USERNAME:fintrack_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:fintrack_pass}
