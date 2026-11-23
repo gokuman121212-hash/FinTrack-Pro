@@ -3,190 +3,434 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            obsidian: "#090D16",
-            slatebase: "#0F172A",
-            slatepanel: "#131E33",
-            slateborder: "#1E293B",
-            cobalt: "#1D4ED8",
-            cobaltlight: "#3B82F6",
-            ice: "#E2E8F0",
-            muted: "#94A3B8"
-          }
-        }
-      }
-    }
-  </script>
-</head><title>FinTrack Pro — Portal Empleado (Puerto 8083)</title>
-<body class="bg-obsidian text-ice min-h-screen flex">
-  <aside class="w-64 shrink-0 bg-slatebase border-r border-slateborder flex flex-col justify-between p-5">
-    <div class="space-y-6">
-      <div class="border-b border-slateborder pb-4">
-        <p class="text-[11px] font-mono uppercase tracking-wider text-cobaltlight">Puerto 8083</p>
-        <h1 class="text-lg font-semibold text-white mt-0.5">FinTrack Empleado</h1>
-      </div>
-      <nav class="space-y-1 text-sm">
-        <button onclick="irEmp('emp-gasto')" class="w-full text-left px-3 py-2 rounded-md bg-slatepanel text-white font-medium border border-slateborder">Registrar Gasto</button>
-        <button onclick="irEmp('emp-consulta')" class="w-full text-left px-3 py-2 rounded-md text-muted hover:text-white hover:bg-slatepanel transition">Consulta y Búsqueda</button>
-      </nav>
-    </div>
-    <div class="border-t border-slateborder pt-4 text-xs text-muted space-y-1">
-      <p class="font-mono text-ice/80">EMPLEADO · JWT</p>
-      <p id="sideEmpEstado" class="text-muted">Sesión no iniciada</p>
-    </div>
-  </aside>
+  <title>FinTrack Pro - USUARIO</title>
+</head>
+<body data-role="USUARIO">
+<script>
+(function() {
+  const ROLE_REQUIRED = document.body.dataset.role || "USUARIO";
+  const STORAGE_KEY = "fintrack_session_" + ROLE_REQUIRED;
+  const TX_KEY = "fintrack_tx_pg_mirror_v1";
 
-  <div class="flex-1 flex flex-col min-w-0">
-    <header class="bg-slatebase border-b border-slateborder px-8 py-4 flex items-center justify-between">
-      <div>
-        <h2 class="text-base font-semibold text-white">Gastos Operativos y Consulta de Presupuesto</h2>
-        <p class="text-xs text-muted">Acceso exclusivo credenciales de empleado</p>
-      </div>
-      <button onclick="cerrarEmp()" class="text-xs px-3 py-1.5 rounded-md border border-slateborder text-muted hover:text-white">Cerrar sesión</button>
-    </header>
+  const DEMO_USERS = {
+    ADMINISTRADOR: { user: "admin@fintrack.pe", pass: "Admin123*", role: "ADMINISTRADOR", name: "Admin General" },
+    FINANCIERO:    { user: "finanzas@fintrack.pe", pass: "Finan123*", role: "FINANCIERO", name: "Analista Financiero" },
+    USUARIO:       { user: "usuario@fintrack.pe", pass: "User123*", role: "USUARIO", name: "Usuario Operativo" }
+  };
 
-    <section id="loginGateEmp" class="flex-1 flex items-center justify-center p-8">
-      <form id="formLoginEmp" class="w-full max-w-md bg-slatebase border border-slateborder rounded-md p-7 space-y-4">
-        <div>
-          <p class="text-xs font-mono text-cobaltlight">PORTAL EMPLEADO · :8083</p>
-          <h3 class="text-xl font-semibold text-white mt-1">Iniciar sesión</h3>
-        </div>
-        <div class="space-y-1">
-          <label class="text-xs text-muted">Correo corporativo</label>
-          <input id="empUser" type="email" required placeholder="usuario@empresa.com" class="w-full bg-obsidian border border-slateborder rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-cobaltlight" />
-        </div>
-        <div class="space-y-1">
-          <label class="text-xs text-muted">Contraseña</label>
-          <input id="empPass" type="password" required placeholder="••••••••" class="w-full bg-obsidian border border-slateborder rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-cobaltlight" />
-        </div>
-        <p id="empErr" class="text-xs text-rose-400 hidden"></p>
-        <button type="submit" class="w-full bg-cobalt hover:bg-cobaltlight text-white text-sm font-medium py-2.5 rounded-md transition">Ingresar al sistema</button>
-      </form>
-    </section>
+  function getTransactions() {
+    try { return JSON.parse(localStorage.getItem(TX_KEY) || "[]"); } catch { return []; }
+  }
+  function saveTransactions(list) {
+    localStorage.setItem(TX_KEY, JSON.stringify(list));
+  }
 
-    <main id="workEmp" class="hidden flex-1 p-8 space-y-6">
-      <div id="emp-gasto" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <form id="formEmpGasto" class="bg-slatebase border border-slateborder rounded-md p-5 space-y-3">
-          <h3 class="text-sm font-semibold text-white">Registrar Gasto del Área</h3>
-          <div class="grid grid-cols-2 gap-3">
-            <input id="empDeptoId" type="number" min="1" value="1" onchange="cargarEmp()" required class="bg-obsidian border border-slateborder rounded-md px-3 py-2 text-sm text-white" />
-            <input id="empMonto" type="number" step="0.01" min="0.01" required placeholder="Monto (S/)" class="bg-obsidian border border-slateborder rounded-md px-3 py-2 text-sm text-white" />
-          </div>
-          <input id="empCat" required placeholder="Categoría (ej. Viáticos, Insumos)" class="w-full bg-obsidian border border-slateborder rounded-md px-3 py-2 text-sm text-white" />
-          <input id="empDesc" required placeholder="Descripción del gasto" class="w-full bg-obsidian border border-slateborder rounded-md px-3 py-2 text-sm text-white" />
-          <button type="submit" class="w-full bg-cobalt hover:bg-cobaltlight text-white text-sm font-medium py-2.5 rounded-md transition">Enviar gasto</button>
-        </form>
-
-        <div class="bg-slatebase border border-slateborder rounded-md p-5 space-y-3">
-          <h3 class="text-sm font-semibold text-white">Estado Presupuestario del Departamento</h3>
-          <div id="empResumenDepto" class="bg-obsidian border border-slateborder rounded-md p-4 text-xs space-y-2 text-ice"></div>
-        </div>
-      </div>
-
-      <div id="emp-consulta" class="bg-slatebase border border-slateborder rounded-md p-5 space-y-4">
-        <h3 class="text-sm font-semibold text-white">Panel de Búsqueda en Movimientos del Área</h3>
-        <input id="empBuscar" oninput="renderEmpTx()" placeholder="Buscar por categoría o descripción..." class="w-full md:w-96 bg-obsidian border border-slateborder rounded-md px-3 py-2 text-sm text-white" />
-        <ul id="empListaTx" class="divide-y divide-slateborder text-xs"></ul>
-      </div>
-    </main>
-  </div>
-
-  <script>
-    let tokenEmp = sessionStorage.getItem("jwt_p8083") || "";
-    let txEmp = [];
-
-    function irEmp(id) { document.getElementById(id).scrollIntoView({ behavior: "smooth" }); }
-    function cerrarEmp() { sessionStorage.removeItem("jwt_p8083"); location.reload(); }
-
-    function activarEmp() {
-      document.getElementById("loginGateEmp").classList.add("hidden");
-      document.getElementById("workEmp").classList.remove("hidden");
-      document.getElementById("sideEmpEstado").textContent = "Autenticado";
-      cargarEmp();
-    }
-
-    document.getElementById("formLoginEmp").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const err = document.getElementById("empErr");
-      err.classList.add("hidden");
+  async function authenticate(username, password) {
+    try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: document.getElementById("empUser").value,
-          password: document.getElementById("empPass").value,
-          expectedRole: "EMPLEADO"
-        })
+        body: JSON.stringify({ username, password, expectedRole: ROLE_REQUIRED })
       });
-      const data = await res.json();
-      if (!res.ok || !data.token) {
-        err.textContent = data.error || "Credenciales inválidas.";
-        err.classList.remove("hidden");
+      if (res.ok) {
+        const data = await res.json();
+        const role = (data.role || ROLE_REQUIRED).toUpperCase();
+        if (role !== ROLE_REQUIRED) {
+          throw new Error("Este acceso corresponde al rol " + role + ", no a " + ROLE_REQUIRED + ".");
+        }
+        return { username, role, name: data.name || username, token: data.token || "pg-jwt", source: "PostgreSQL API" };
+      }
+    } catch (e) {
+      if (e && e.message && e.message.includes("corresponde al rol")) throw e;
+    }
+
+    const expected = DEMO_USERS[ROLE_REQUIRED];
+    if (expected && username.trim().toLowerCase() === expected.user && password === expected.pass) {
+      return { username: expected.user, role: ROLE_REQUIRED, name: expected.name, token: "local-demo", source: "Modo Demo Estático" };
+    }
+    throw new Error("Credenciales inválidas para " + ROLE_REQUIRED + ".");
+  }
+
+  function renderReceiptModal(tx) {
+    const existing = document.getElementById("ft-receipt-modal");
+    if (existing) existing.remove();
+    const modal = document.createElement("div");
+    modal.id = "ft-receipt-modal";
+    modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px;";
+    modal.innerHTML = `
+      <div style="background:#111827;color:#f9fafb;border:1px solid #374151;border-radius:12px;max-width:440px;width:100%;padding:22px;font-family:system-ui,sans-serif;">
+        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #374151;padding-bottom:10px;margin-bottom:14px;">
+          <strong>RECIBO DE OPERACIÓN · FINTRACK PRO</strong>
+          <button id="ft-close-rec" style="background:#374151;color:#fff;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;">Cerrar</button>
+        </div>
+        <p style="margin:6px 0;"><strong>N° Recibo:</strong> ${tx.receiptCode}</p>
+        <p style="margin:6px 0;"><strong>Fecha / Hora:</strong> ${new Date(tx.createdAt).toLocaleString()}</p>
+        <p style="margin:6px 0;"><strong>Rol / Operador:</strong> ${tx.role} (${tx.operator})</p>
+        <p style="margin:6px 0;"><strong>Monto:</strong> S/ ${Number(tx.amount).toFixed(2)}</p>
+        <p style="margin:6px 0;"><strong>Motivo:</strong> ${tx.reason}</p>
+        <div style="margin-top:16px;display:flex;gap:10px;">
+          <button id="ft-print-rec" style="flex:1;background:#2563eb;color:#fff;border:none;border-radius:8px;padding:10px;font-weight:600;cursor:pointer;">Imprimir / Guardar PDF</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+    document.getElementById("ft-close-rec").onclick = () => modal.remove();
+    document.getElementById("ft-print-rec").onclick = () => window.print();
+  }
+
+  function buildBarChartSVG(title, buckets) {
+    const maxVal = Math.max(1, ...buckets.map(b => b.value));
+    const bars = buckets.map((b, idx) => {
+      const h = Math.round((b.value / maxVal) * 110);
+      const x = 36 + idx * 68;
+      const y = 135 - h;
+      return `
+        <rect x="${x}" y="${y}" width="38" height="${h}" rx="5" fill="#38bdf8"></rect>
+        <text x="${x + 19}" y="152" fill="#cbd5e1" font-size="11" text-anchor="middle">${b.label}</text>
+        <text x="${x + 19}" y="${Math.max(12, y - 5)}" fill="#f8fafc" font-size="10" text-anchor="middle">${b.value.toFixed(0)}</text>`;
+    }).join("");
+    return `
+      <div style="background:#111827;border:1px solid #1f2937;border-radius:12px;padding:14px;">
+        <div style="font-weight:700;color:#f8fafc;margin-bottom:8px;">${title}</div>
+        <svg viewBox="0 0 320 165" style="width:100%;height:auto;display:block;">
+          <line x1="24" y1="135" x2="308" y2="135" stroke="#475569" stroke-width="1.5"/>
+          ${bars}
+        </svg>
+      </div>`;
+  }
+
+  function computeThreeCharts(txList) {
+    const now = new Date();
+    const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const weekStart = dayStart - 6 * 86400000;
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+
+    const dayTotal = txList.filter(t => t.createdAt >= dayStart).reduce((s, t) => s + Number(t.amount), 0);
+    const weekTotal = txList.filter(t => t.createdAt >= weekStart).reduce((s, t) => s + Number(t.amount), 0);
+    const monthTotal = txList.filter(t => t.createdAt >= monthStart).reduce((s, t) => s + Number(t.amount), 0);
+
+    const dayBuckets = [
+      { label: "00-08h", value: 0 },
+      { label: "08-16h", value: 0 },
+      { label: "16-24h", value: 0 }
+    ];
+    txList.filter(t => t.createdAt >= dayStart).forEach(t => {
+      const hr = new Date(t.createdAt).getHours();
+      if (hr < 8) dayBuckets[0].value += Number(t.amount);
+      else if (hr < 16) dayBuckets[1].value += Number(t.amount);
+      else dayBuckets[2].value += Number(t.amount);
+    });
+
+    const weekBuckets = [];
+    for (let i = 6; i >= 0; i--) {
+      const s = dayStart - i * 86400000;
+      const e = s + 86400000;
+      const d = new Date(s);
+      const sum = txList.filter(t => t.createdAt >= s && t.createdAt < e).reduce((a, b) => a + Number(b.amount), 0);
+      weekBuckets.push({ label: `${d.getDate()}/${d.getMonth() + 1}`, value: sum });
+    }
+
+    const monthBuckets = [
+      { label: "Sem 1", value: 0 },
+      { label: "Sem 2", value: 0 },
+      { label: "Sem 3", value: 0 },
+      { label: "Sem 4+", value: 0 }
+    ];
+    txList.filter(t => t.createdAt >= monthStart).forEach(t => {
+      const day = new Date(t.createdAt).getDate();
+      const idx = Math.min(3, Math.floor((day - 1) / 7));
+      monthBuckets[idx].value += Number(t.amount);
+    });
+
+    return {
+      dayTotal, weekTotal, monthTotal,
+      svgDay: buildBarChartSVG("Gráfico Diario (Hoy — S/)", dayBuckets),
+      svgWeek: buildBarChartSVG("Gráfico Semanal (7 días — S/)", weekBuckets),
+      svgMonth: buildBarChartSVG("Gráfico Mensual (Mes actual — S/)", monthBuckets)
+    };
+  }
+
+  function renderWorkspace(session) {
+    document.body.innerHTML = "";
+    document.body.style.cssText = "margin:0;background:#090d16;color:#f3f4f6;font-family:system-ui,-apple-system,sans-serif;min-height:100vh;";
+
+    const app = document.createElement("div");
+    app.style.cssText = "max-width:1120px;margin:0 auto;padding:24px;";
+
+    const topBar = document.createElement("div");
+    topBar.style.cssText = "display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;background:#111827;border:1px solid #1f2937;padding:14px 18px;border-radius:12px;margin-bottom:20px;";
+    topBar.innerHTML = `
+      <div>
+        <div style="font-size:12px;color:#38bdf8;font-weight:700;">FINTRACK PRO · ROL ${session.role}</div>
+        <div style="font-size:14px;color:#d1d5db;">${session.name} (${session.username}) · <span style="color:#34d399;">${session.source}</span></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <a href="financiero.html" style="color:#e5e7eb;text-decoration:none;padding:6px 10px;border-radius:8px;background:#1f2937;font-size:13px;">Financiero</a>
+        <a href="usuario.html" style="color:#e5e7eb;text-decoration:none;padding:6px 10px;border-radius:8px;background:#1f2937;font-size:13px;">Usuario</a>
+        <a href="administrador.html" style="color:#e5e7eb;text-decoration:none;padding:6px 10px;border-radius:8px;background:#1f2937;font-size:13px;">Administrador</a>
+        <button id="ft-logout" style="background:#dc2626;color:#fff;border:none;border-radius:8px;padding:7px 12px;font-weight:600;cursor:pointer;">Cerrar sesión</button>
+      </div>`;
+    app.appendChild(topBar);
+
+    const tabs = document.createElement("div");
+    tabs.style.cssText = "display:flex;gap:10px;margin-bottom:18px;";
+    const tabMain = document.createElement("button");
+    const tabCharts = document.createElement("button");
+    tabMain.textContent = ROLE_REQUIRED === "FINANCIERO" ? "Carga Rápida y Pagos" : ROLE_REQUIRED === "ADMINISTRADOR" ? "Panel Administrador" : "Registro de Usuario";
+    tabCharts.textContent = "Gráficos (Día / Semana / Mes)";
+    [tabMain, tabCharts].forEach((b, i) => {
+      b.style.cssText = i === 0
+        ? "background:#2563eb;color:#fff;border:none;border-radius:8px;padding:10px 16px;font-weight:700;cursor:pointer;"
+        : "background:#111827;color:#cbd5e1;border:1px solid #374151;border-radius:8px;padding:10px 16px;font-weight:600;cursor:pointer;";
+    });
+    tabs.append(tabMain, tabCharts);
+    app.appendChild(tabs);
+
+    const mainSection = document.createElement("div");
+    const chartsSection = document.createElement("div");
+    chartsSection.style.display = "none";
+    app.append(mainSection, chartsSection);
+    document.body.appendChild(app);
+
+    document.getElementById("ft-logout").onclick = () => {
+      sessionStorage.removeItem(STORAGE_KEY);
+      location.reload();
+    };
+
+    function refreshAll() {
+      const allTx = getTransactions().sort((a, b) => b.createdAt - a.createdAt);
+      const roleTx = ROLE_REQUIRED === "ADMINISTRADOR" ? allTx : allTx.filter(t => t.role === ROLE_REQUIRED);
+
+      if (ROLE_REQUIRED === "FINANCIERO") {
+        mainSection.innerHTML = `
+          <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:18px;">
+            <form id="ft-fin-form" style="background:#111827;border:1px solid #1f2937;border-radius:12px;padding:18px;">
+              <h2 style="margin:0 0 12px 0;font-size:18px;">Registro Rápido de Pagos</h2>
+              <label style="display:block;font-size:13px;color:#9ca3af;margin-bottom:4px;">Monto (S/)</label>
+              <input id="ft-amount" type="number" step="0.01" min="0.01" required placeholder="Ej. 250.00" style="width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:1px solid #374151;background:#090d16;color:#fff;margin-bottom:12px;"/>
+              <label style="display:block;font-size:13px;color:#9ca3af;margin-bottom:4px;">Motivo del pago</label>
+              <input id="ft-reason" type="text" required placeholder="Ej. Proveedor logística / servicio" style="width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:1px solid #374151;background:#090d16;color:#fff;margin-bottom:14px;"/>
+              <button type="submit" style="width:100%;background:#10b981;color:#06281e;border:none;border-radius:8px;padding:11px;font-weight:800;cursor:pointer;">Agregar Pago y Generar Recibo</button>
+            </form>
+            <div style="background:#111827;border:1px solid #1f2937;border-radius:12px;padding:18px;">
+              <h2 style="margin:0 0 12px 0;font-size:18px;">Lista Ordenada de Pagos (${roleTx.length})</h2>
+              <div id="ft-tx-list" style="display:flex;flex-direction:column;gap:8px;max-height:420px;overflow:auto;"></div>
+            </div>
+          </div>`;
+
+        const listEl = document.getElementById("ft-tx-list");
+        if (!roleTx.length) {
+          listEl.innerHTML = `<div style="color:#9ca3af;font-size:14px;">Sin pagos registrados todavía.</div>`;
+        } else {
+          roleTx.forEach((tx, idx) => {
+            const row = document.createElement("div");
+            row.style.cssText = "display:flex;justify-content:space-between;align-items:center;background:#090d16;border:1px solid #1f2937;border-radius:8px;padding:10px 12px;";
+            row.innerHTML = `
+              <div>
+                <div style="font-weight:700;">#${idx + 1} · S/ ${Number(tx.amount).toFixed(2)} — ${tx.reason}</div>
+                <div style="font-size:12px;color:#9ca3af;">Recibo ${tx.receiptCode} · ${new Date(tx.createdAt).toLocaleString()}</div>
+              </div>
+              <button style="background:#2563eb;color:#fff;border:none;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:12px;font-weight:600;">Ver Recibo</button>`;
+            row.querySelector("button").onclick = () => renderReceiptModal(tx);
+            listEl.appendChild(row);
+          });
+        }
+
+        document.getElementById("ft-fin-form").onsubmit = async (ev) => {
+          ev.preventDefault();
+          const amount = parseFloat(document.getElementById("ft-amount").value);
+          const reason = document.getElementById("ft-reason").value.trim();
+          if (!amount || amount <= 0 || !reason) return;
+
+          const tx = {
+            id: "TX-" + Date.now(),
+            receiptCode: "REC-" + Math.floor(100000 + Math.random() * 900000),
+            amount, reason, role: session.role, operator: session.username, createdAt: Date.now()
+          };
+
+          try {
+            await fetch("/api/transacciones", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", ...(session.token ? { Authorization: "Bearer " + session.token } : {}) },
+              body: JSON.stringify(tx)
+            });
+          } catch {}
+
+          const updated = getTransactions();
+          updated.push(tx);
+          saveTransactions(updated);
+          ev.target.reset();
+          document.getElementById("ft-amount").focus();
+          refreshAll();
+          renderReceiptModal(tx);
+        };
+      } else if (ROLE_REQUIRED === "ADMINISTRADOR") {
+        const totalGeneral = allTx.reduce((s, t) => s + Number(t.amount), 0);
+        mainSection.innerHTML = `
+          <div style="background:#111827;border:1px solid #1f2937;border-radius:12px;padding:18px;">
+            <h2 style="margin:0 0 10px 0;">Control Global de Administrador</h2>
+            <p style="color:#9ca3af;margin:0 0 14px 0;">Total acumulado registrado: <strong style="color:#34d399;">S/ ${totalGeneral.toFixed(2)}</strong> · Operaciones: <strong>${allTx.length}</strong></p>
+            <div id="ft-admin-rows" style="display:flex;flex-direction:column;gap:8px;"></div>
+          </div>`;
+        const box = document.getElementById("ft-admin-rows");
+        if (!allTx.length) {
+          box.innerHTML = `<div style="color:#9ca3af;">No hay registros todavía.</div>`;
+        } else {
+          allTx.forEach(tx => {
+            const d = document.createElement("div");
+            d.style.cssText = "display:flex;justify-content:space-between;align-items:center;background:#090d16;border:1px solid #1f2937;border-radius:8px;padding:10px 12px;";
+            d.innerHTML = `<div><strong>[${tx.role}]</strong> S/ ${Number(tx.amount).toFixed(2)} — ${tx.reason} <span style="color:#9ca3af;font-size:12px;">(${new Date(tx.createdAt).toLocaleString()})</span></div>
+              <button style="background:#2563eb;color:#fff;border:none;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:12px;">Recibo</button>`;
+            d.querySelector("button").onclick = () => renderReceiptModal(tx);
+            box.appendChild(d);
+          });
+        }
+      } else {
+        mainSection.innerHTML = `
+          <div style="display:grid;grid-template-columns:1fr 1.2fr;gap:18px;">
+            <form id="ft-usr-form" style="background:#111827;border:1px solid #1f2937;border-radius:12px;padding:18px;">
+              <h2 style="margin:0 0 12px 0;">Registro Operativo de Usuario</h2>
+              <label style="display:block;font-size:13px;color:#9ca3af;margin-bottom:4px;">Monto (S/)</label>
+              <input id="ft-u-amount" type="number" step="0.01" min="0.01" required placeholder="Ej. 45.00" style="width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:1px solid #374151;background:#090d16;color:#fff;margin-bottom:12px;"/>
+              <label style="display:block;font-size:13px;color:#9ca3af;margin-bottom:4px;">Motivo</label>
+              <input id="ft-u-reason" type="text" required placeholder="Ej. Movilidad / material de área" style="width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:1px solid #374151;background:#090d16;color:#fff;margin-bottom:14px;"/>
+              <button type="submit" style="width:100%;background:#2563eb;color:#fff;border:none;border-radius:8px;padding:11px;font-weight:700;cursor:pointer;">Registrar y Ver Recibo</button>
+            </form>
+            <div style="background:#111827;border:1px solid #1f2937;border-radius:12px;padding:18px;">
+              <h2 style="margin:0 0 12px 0;">Mis Registros (${roleTx.length})</h2>
+              <div id="ft-u-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+            </div>
+          </div>`;
+
+        const uList = document.getElementById("ft-u-list");
+        if (!roleTx.length) {
+          uList.innerHTML = `<div style="color:#9ca3af;">Aún no registraste movimientos.</div>`;
+        } else {
+          roleTx.forEach(tx => {
+            const row = document.createElement("div");
+            row.style.cssText = "display:flex;justify-content:space-between;align-items:center;background:#090d16;border:1px solid #1f2937;border-radius:8px;padding:10px 12px;";
+            row.innerHTML = `<div><strong>S/ ${Number(tx.amount).toFixed(2)}</strong> — ${tx.reason} <div style="font-size:12px;color:#9ca3af;">${tx.receiptCode}</div></div>
+              <button style="background:#2563eb;color:#fff;border:none;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:12px;">Recibo</button>`;
+            row.querySelector("button").onclick = () => renderReceiptModal(tx);
+            uList.appendChild(row);
+          });
+        }
+
+        document.getElementById("ft-usr-form").onsubmit = async (ev) => {
+          ev.preventDefault();
+          const amount = parseFloat(document.getElementById("ft-u-amount").value);
+          const reason = document.getElementById("ft-u-reason").value.trim();
+          if (!amount || amount <= 0 || !reason) return;
+          const tx = {
+            id: "TX-" + Date.now(),
+            receiptCode: "REC-" + Math.floor(100000 + Math.random() * 900000),
+            amount, reason, role: session.role, operator: session.username, createdAt: Date.now()
+          };
+          try {
+            await fetch("/api/transacciones", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", ...(session.token ? { Authorization: "Bearer " + session.token } : {}) },
+              body: JSON.stringify(tx)
+            });
+          } catch {}
+          const updated = getTransactions();
+          updated.push(tx);
+          saveTransactions(updated);
+          ev.target.reset();
+          refreshAll();
+          renderReceiptModal(tx);
+        };
+      }
+
+      const c = computeThreeCharts(allTx);
+      chartsSection.innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px;">
+          ${c.svgDay}
+          ${c.svgWeek}
+          ${c.svgMonth}
+        </div>
+        <div style="background:#111827;border:1px solid #1f2937;border-radius:12px;padding:16px;">
+          <h3 style="margin:0 0 10px 0;">Resumen Tabular de Gastos</h3>
+          <table style="width:100%;border-collapse:collapse;font-size:14px;">
+            <thead>
+              <tr style="border-bottom:1px solid #374151;text-align:left;color:#9ca3af;">
+                <th style="padding:8px;">Periodo</th>
+                <th style="padding:8px;">Acumulado (S/)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid #1f2937;"><td style="padding:8px;">Día (Hoy)</td><td style="padding:8px;font-weight:700;">S/ ${c.dayTotal.toFixed(2)}</td></tr>
+              <tr style="border-bottom:1px solid #1f2937;"><td style="padding:8px;">Semana (Últimos 7 días)</td><td style="padding:8px;font-weight:700;">S/ ${c.weekTotal.toFixed(2)}</td></tr>
+              <tr><td style="padding:8px;">Mes (Mes actual)</td><td style="padding:8px;font-weight:700;">S/ ${c.monthTotal.toFixed(2)}</td></tr>
+            </tbody>
+          </table>
+        </div>`;
+    }
+
+    tabMain.onclick = () => {
+      mainSection.style.display = "block";
+      chartsSection.style.display = "none";
+      tabMain.style.background = "#2563eb";
+      tabCharts.style.background = "#111827";
+    };
+    tabCharts.onclick = () => {
+      mainSection.style.display = "none";
+      chartsSection.style.display = "block";
+      tabCharts.style.background = "#2563eb";
+      tabMain.style.background = "#111827";
+    };
+
+    refreshAll();
+  }
+
+  function renderLoginGate() {
+    document.body.innerHTML = "";
+    document.body.style.cssText = "margin:0;background:#090d16;color:#f3f4f6;font-family:system-ui,-apple-system,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;";
+    const expected = DEMO_USERS[ROLE_REQUIRED] || DEMO_USERS.USUARIO;
+
+    const card = document.createElement("div");
+    card.style.cssText = "background:#111827;border:1px solid #1f2937;border-radius:14px;max-width:410px;width:100%;padding:24px;";
+    card.innerHTML = `
+      <div style="font-size:12px;color:#38bdf8;font-weight:700;margin-bottom:6px;">ACCESO RESTRINGIDO · ${ROLE_REQUIRED}</div>
+      <h1 style="margin:0 0 8px 0;font-size:22px;">Iniciar Sesión</h1>
+      <p style="margin:0 0 16px 0;font-size:13px;color:#9ca3af;">Ingresa tus credenciales de <strong>${ROLE_REQUIRED}</strong> para continuar.</p>
+      <form id="ft-login-form">
+        <label style="display:block;font-size:13px;color:#d1d5db;margin-bottom:4px;">Correo o usuario</label>
+        <input id="ft-user" type="text" required value="${expected.user}" style="width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:1px solid #374151;background:#090d16;color:#fff;margin-bottom:12px;"/>
+        <label style="display:block;font-size:13px;color:#d1d5db;margin-bottom:4px;">Contraseña</label>
+        <input id="ft-pass" type="password" required value="${expected.pass}" style="width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:1px solid #374151;background:#090d16;color:#fff;margin-bottom:14px;"/>
+        <div id="ft-err" style="color:#f87171;font-size:13px;margin-bottom:10px;min-height:18px;"></div>
+        <button type="submit" style="width:100%;background:#2563eb;color:#fff;border:none;border-radius:8px;padding:11px;font-weight:700;cursor:pointer;">Entrar a ${ROLE_REQUIRED}</button>
+      </form>`;
+    document.body.appendChild(card);
+
+    document.getElementById("ft-login-form").onsubmit = async (e) => {
+      e.preventDefault();
+      const errEl = document.getElementById("ft-err");
+      errEl.textContent = "";
+      try {
+        const uVal = document.getElementById("ft-user").value;
+        const pVal = document.getElementById("ft-pass").value;
+        const session = await authenticate(uVal, pVal);
+        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+        renderWorkspace(session);
+      } catch (err) {
+        errEl.textContent = err.message || "Error al iniciar sesión.";
+      }
+    };
+  }
+
+  const saved = sessionStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      if (parsed && parsed.role === ROLE_REQUIRED) {
+        renderWorkspace(parsed);
         return;
       }
-      tokenEmp = data.token;
-      sessionStorage.setItem("jwt_p8083", tokenEmp);
-      activarEmp();
-    });
-
-    async function cargarEmp() {
-      const id = document.getElementById("empDeptoId").value;
-      const r1 = await fetch(`/api/departamentos/${id}/presupuesto`, { headers: { Authorization: "Bearer " + tokenEmp } });
-      const d = await r1.json();
-      if (!d.error) {
-        document.getElementById("empResumenDepto").innerHTML = `
-          <p><strong>Departamento:</strong> ${d.departamentoNombre} (#${d.departamentoId})</p>
-          <p><strong>Presupuesto mensual:</strong> S/ ${Number(d.presupuestoMensual).toFixed(2)}</p>
-          <p><strong>Gasto acumulado:</strong> S/ ${Number(d.gastoAcumulado).toFixed(2)}</p>
-          <p><strong>Saldo disponible:</strong> S/ ${Number(d.saldoDisponible).toFixed(2)}</p>
-          <p><strong>Porcentaje usado:</strong> ${Number(d.porcentajeUsado).toFixed(2)}% · <span class="text-amber-300 font-mono">${d.alerta}</span></p>
-        `;
-      }
-      const r2 = await fetch("/api/transacciones", { headers: { Authorization: "Bearer " + tokenEmp } });
-      if (r2.ok) {
-        const all = await r2.json();
-        txEmp = all.filter(t => String(t.departamentoId) === String(id)).reverse();
-        renderEmpTx();
-      }
-    }
-
-    function renderEmpTx() {
-      const q = document.getElementById("empBuscar").value.toLowerCase().trim();
-      const items = txEmp.filter(t => !q || String(t.categoria || "").toLowerCase().includes(q) || String(t.descripcion || "").toLowerCase().includes(q));
-      document.getElementById("empListaTx").innerHTML = items.map(t => `
-        <li class="py-2.5 flex justify-between items-center">
-          <span><strong class="text-white">${t.tipo}</strong> · <span class="text-cobaltlight">${t.categoria}</span> — ${t.descripcion || "-"}</span>
-          <span class="font-mono text-white">S/ ${Number(t.monto).toFixed(2)}</span>
-        </li>
-      `).join("") || `<li class="py-3 text-muted">Sin movimientos registrados.</li>`;
-    }
-
-    document.getElementById("formEmpGasto").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const res = await fetch("/api/transacciones", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: "Bearer " + tokenEmp },
-        body: JSON.stringify({
-          departamentoId: document.getElementById("empDeptoId").value,
-          tipo: "EGRESO",
-          monto: document.getElementById("empMonto").value,
-          categoria: document.getElementById("empCat").value,
-          descripcion: document.getElementById("empDesc").value
-        })
-      });
-      const data = await res.json();
-      alert(data.error || "Gasto registrado.");
-      e.target.reset();
-      cargarEmp();
-    });
-
-    if (tokenEmp) activarEmp();
-  </script>
-<script src="/app.js"></script>
+    } catch {}
+  }
+  renderLoginGate();
+})();
+</script>
 </body>
 </html>
